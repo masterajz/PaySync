@@ -2481,17 +2481,15 @@ window.calcDaily = function(empId, index, el) {
     };
 }
 // SUREBALL AUTO-SWITCH TO REGISTER
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('mode') === 'register') {
-                const switchBtn = document.getElementById('auth-switch-btn');
-                if (switchBtn) {
-                    switchBtn.click(); 
-                }
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'register') {
+            const switchBtn = document.getElementById('auth-switch-btn');
+            if (switchBtn && typeof isLoginMode !== 'undefined' && isLoginMode) {
+                switchBtn.click(); 
             }
-        }, 300); // Nilagyan natin ng 300ms delay para siguradong loaded na lahat ng click events
-    });
+        }
+    }, 100);
     </script>
 </body>
 </html>
