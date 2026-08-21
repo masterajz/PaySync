@@ -2480,13 +2480,19 @@ window.calcDaily = function(empId, index, el) {
         dateStr, timeIn, timeOut, ot, nd: ndHours, duration: totalDur, rate: dailyRateVal, basicPay: basicPay 
     };
 }
-// 👉 AUTO-SWITCH TO REGISTER MODE KUNG MAY ?mode=register SA URL
-if (new URLSearchParams(window.location.search).get('mode') === 'register') {
-    const switchBtn = document.getElementById('auth-switch-btn');
-    if (switchBtn) {
-        switchBtn.click();
-    }
-}
+// 🚀 AUTO-SWITCH TO REGISTER MODE (WITH DELAY PARA SURE)
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'register') {
+            const switchBtn = document.getElementById('auth-switch-btn');
+            // I-c-click lang niya kung nasa Login mode pa rin tayo
+            if (switchBtn && typeof isLoginMode !== 'undefined' && isLoginMode === true) {
+                switchBtn.click();
+            }
+        }
+    }, 300); // 300 milliseconds delay para siguradong loaded na ang lahat
+});
     </script>
 </body>
 </html>
