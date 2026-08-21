@@ -938,6 +938,7 @@
         window.currentTab = 'employee';
         window.showingArchived = false;
         window.editMode = false;
+        let isLoginMode = true;
 
         // TABS
         document.getElementById('btn-employee').addEventListener('click', () => switchTab('employee'));
@@ -1193,7 +1194,7 @@
             };
             window.govRates = { sss: 0, philhealth: 0, pagibig: 0 };
 
-            let isLoginMode = true;
+            
 			
 
             // AUTH
