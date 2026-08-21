@@ -2480,18 +2480,12 @@ window.calcDaily = function(empId, index, el) {
         dateStr, timeIn, timeOut, ot, nd: ndHours, duration: totalDur, rate: dailyRateVal, basicPay: basicPay 
     };
 }
-// AUTH SWITCH TOGGLE (SIGN IN <-> REGISTER)
-const authSwitchBtn = document.getElementById('auth-switch-btn');
-if (authSwitchBtn) {
-    authSwitchBtn.addEventListener('click', () => {
-        // ... (mga code ng login/register logic)
-        }
-    });
-}
-
-// 👉 IDAGDAG MO ITO MISMO DITO:
+// 👉 AUTO-SWITCH TO REGISTER MODE KUNG MAY ?mode=register SA URL
 if (new URLSearchParams(window.location.search).get('mode') === 'register') {
-    authSwitchBtn.click();
+    const switchBtn = document.getElementById('auth-switch-btn');
+    if (switchBtn) {
+        switchBtn.click();
+    }
 }
     </script>
 </body>
