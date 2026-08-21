@@ -48,9 +48,10 @@
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="#features" class="text-slate-500 hover:text-brand-600 font-medium transition-colors">Features</a>
                     <a href="#pricing" class="text-slate-500 hover:text-brand-600 font-medium transition-colors">Pricing</a>
-                    <!-- LINK TO DASHBOARD APP -->
+                    <!-- LINK TO DASHBOARD APP (Sign In) -->
                     <a href="/app" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Sign In</a>
-                    <a href="/app" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-0.5">Start Free Trial</a>
+                    <!-- LINK TO DASHBOARD APP (Register mode) -->
+                    <a href="/app?mode=register" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-0.5">Start Free Trial</a>
                 </div>
             </div>
         </div>
@@ -78,7 +79,8 @@
                         Say goodbye to manual Excel sheets. PayrollSync automatically calculates timesheets, night differentials, and standard deductions in just a few clicks.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <a href="/app" class="flex justify-center items-center bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-brand-500/30 transition-all hover:-translate-y-1">
+                        <!-- LINK TO REGISTER MODE -->
+                        <a href="/app?mode=register" class="flex justify-center items-center bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-brand-500/30 transition-all hover:-translate-y-1">
                             Start for Free
                             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </a>
@@ -183,7 +185,7 @@
                         <span class="text-slate-500">/ 7 days</span>
                     </div>
                     <p class="text-slate-500 text-sm mb-6">Perfect for testing the waters and seeing the magic.</p>
-                    <a href="/app" class="block w-full py-3 px-4 bg-brand-50 text-brand-700 hover:bg-brand-100 text-center rounded-xl font-bold transition-colors">Start Trial</a>
+                    <a href="/app?mode=register" class="block w-full py-3 px-4 bg-brand-50 text-brand-700 hover:bg-brand-100 text-center rounded-xl font-bold transition-colors">Start Trial</a>
                     <ul class="mt-8 space-y-4 text-sm text-slate-600">
                         <li class="flex items-center gap-3"><svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 5 Employees</li>
                         <li class="flex items-center gap-3"><svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Standard Timesheet</li>
@@ -202,7 +204,7 @@
                         <span class="text-slate-500">/ month</span>
                     </div>
                     <p class="text-slate-600 text-sm mb-6">For growing SMEs that need full payroll automation.</p>
-                    <a href="/app" class="block w-full py-3 px-4 bg-brand-600 text-white hover:bg-brand-700 text-center rounded-xl font-bold transition-colors shadow-lg">Get Pro</a>
+                    <a href="/app?mode=register" class="block w-full py-3 px-4 bg-brand-600 text-white hover:bg-brand-700 text-center rounded-xl font-bold transition-colors shadow-lg">Get Pro</a>
                     <ul class="mt-8 space-y-4 text-sm text-slate-700">
                         <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 50 Employees</li>
                         <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Custom Shift Schedules</li>
@@ -211,9 +213,9 @@
                     </ul>
                 </div>
 
-                <!-- Blaze Plan -->
+                <!-- Enterprise Plan -->
                 <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                    <h3 class="text-xl font-bold text-rose-600">PayrollSync Blaze</h3>
+                    <h3 class="text-xl font-bold text-rose-600">PayrollSync Enterprise</h3>
                     <div class="mt-4 mb-6">
                         <span class="text-4xl font-extrabold text-slate-900">₱1,499</span>
                         <span class="text-slate-500">/ month</span>
@@ -235,7 +237,20 @@
     <footer class="bg-white border-t border-slate-200 py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-600 font-bold">₱</div>
+                <div class="w-8 h-8 relative flex items-center justify-center drop-shadow-md">
+                    <svg class="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="64" height="64" rx="16" fill="url(#footerGrad)"/>
+                        <path d="M22 16V48" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M22 18H36C42 18 47 23 47 29C47 35 42 40 36 40H22" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M15 30H32" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="footerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#6366F1"/>
+                                <stop offset="100%" stop-color="#4F46E5"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
                 <span class="font-bold text-xl text-slate-800">PayrollSync</span>
             </div>
             <div class="text-sm text-slate-500">
