@@ -1911,11 +1911,17 @@ document.getElementById('save-advance-btn').addEventListener('click', async () =
     const tbody = document.getElementById('timesheet-tbody');
     tbody.innerHTML = '';
     
+    // FIX 1: SIGURADUHING NAKATAGO ANG BULK BUTTON AT WALANG NAKA-CHECK TUWING MAG-GE-GENERATE
+    const bulkBtn = document.getElementById('bulk-archive-ts-btn');
+    if (bulkBtn) bulkBtn.style.display = 'none';
+    const selectAllCb = document.getElementById('select-all-ts');
+    if (selectAllCb) selectAllCb.checked = false;
+
     window.currentTimesheetData = {};
     if(!window.currentTimesheetExtra) window.currentTimesheetExtra = {};
 
     if(activeEmployees.length === 0) {
-        return tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-8 text-center text-slate-400">No active/unarchived employees found.</td></tr>`;
+        return tbody.innerHTML = `<tr><td colspan="12" class="px-6 py-8 text-center text-slate-400">No active/unarchived employees found.</td></tr>`;
     }
 
     window.showLoading("Fetching timesheets...");
@@ -1925,22 +1931,32 @@ document.getElementById('save-advance-btn').addEventListener('click', async () =
     for (const emp of activeEmployees) {
         const docId = `ts_${emp.id}_${periodKey}`;
         let totalHrs = 0; let grossPay = 0;
+        let isArchivedStatus = false; // <-- FIX 2: Flag para malaman kung naka-archive sa DB
+        
         window.currentTimesheetExtra[emp.id] = { cashAdvance: 0, loan: 0, penalty: 0, applyGov: false };
 
         try {
             const tsDoc = await window.db.collection("timesheets").doc(`ts_${emp.id}_${periodKey}`).get();
             if (tsDoc.exists) {
-                window.currentTimesheetData[emp.id] = tsDoc.data().days || [];
-                window.currentTimesheetExtra[emp.id] = {
-                    cashAdvance: tsDoc.data().cashAdvance || 0,
-                    loan: tsDoc.data().loan || 0,
-                    penalty: tsDoc.data().penalty || 0,
-                    applyGov: tsDoc.data().applyGovDeductions || false // <-- Retrieve from DB
-                };
-                totalHrs = window.currentTimesheetData[emp.id].reduce((s, d) => s + d.duration, 0);
-                grossPay = window.currentTimesheetData[emp.id].reduce((s, d) => s + d.rate, 0);
+                // FIX 3: KUNG NAKA-ARCHIVE SA DATABASE, I-SKIP ANG EMPLOYEE NA ITO
+                if (tsDoc.data().isArchived) {
+                    isArchivedStatus = true;
+                } else {
+                    window.currentTimesheetData[emp.id] = tsDoc.data().days || [];
+                    window.currentTimesheetExtra[emp.id] = {
+                        cashAdvance: tsDoc.data().cashAdvance || 0,
+                        loan: tsDoc.data().loan || 0,
+                        penalty: tsDoc.data().penalty || 0,
+                        applyGov: tsDoc.data().applyGovDeductions || false // <-- Retrieve from DB
+                    };
+                    totalHrs = window.currentTimesheetData[emp.id].reduce((s, d) => s + d.duration, 0);
+                    grossPay = window.currentTimesheetData[emp.id].reduce((s, d) => s + d.rate, 0);
+                }
             }
         } catch(e) {}
+
+        // FIX 4: Kung naka-archive ang timesheet para sa period na ito, 'wag na i-render sa main table
+        if(isArchivedStatus) continue;
 
         const extra = window.currentTimesheetExtra[emp.id] || { cashAdvance: 0, loan: 0, penalty: 0, applyGov: false };
         
@@ -3059,12 +3075,14 @@ document.getElementById('adv-tab-other').addEventListener('click', (e) => {
             window.toggleTsBulkBtn();
         });
 
-        // Trigger auto-hide kapag may clinic-click na checkbox
+// Trigger auto-hide kapag may clinic-click na checkbox
         window.toggleTsBulkBtn = function() {
             const checkedCount = document.querySelectorAll('.ts-checkbox:checked').length;
             const btn = document.getElementById('bulk-archive-ts-btn');
             // Dito gumagana yung logic: Lalabas lang as 'flex' pag may check, magiging 'none' pag wala
-            btn.style.display = checkedCount > 0 ? 'flex' : 'none'; 
+            if (btn) {
+                btn.style.display = checkedCount > 0 ? 'flex' : 'none'; 
+            }
         };
 
         document.getElementById('bulk-archive-ts-btn').addEventListener('click', async () => {
