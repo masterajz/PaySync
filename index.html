@@ -1,2211 +1,248 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaySync Dashboard</title>
-    <!-- Tailwind CSS -->
+    <title>PayrollSync | Modern Payroll Software</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- STRICT LIGHT MODE CONFIGURATION -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
-            darkMode: 'class', 
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        slate: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            800: '#1e293b',
-                            900: '#0f172a'
-                        }
+                        brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' }
                     }
                 }
             }
         }
     </script>
-
-    <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc !important; color: #334155 !important; }
-        .tab-active { background-color: #e0e7ff; color: #4f46e5; border-right: 4px solid #4f46e5; font-weight: 600;}
-        .tab-inactive { color: #64748b; }
-        .tab-inactive:hover { background-color: #f1f5f9; color: #0f172a; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        @media print {
-            body > *:not(#print-section) { display: none !important; }
-            #print-section { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px;}
-        }
-    </style>
 </head>
-<body class="overflow-hidden bg-slate-50">
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- ============================================== -->
-    <!-- AUTHENTICATION SCREEN                          -->
-    <!-- ============================================== -->
-    <div id="auth-screen" class="flex h-screen items-center justify-center bg-slate-50 relative w-full z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-md w-96 border border-slate-200">
-            <div class="flex justify-center mb-6">
-                <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                    <span class="text-indigo-600 font-bold text-xl">₱</span>
+    <!-- NAVBAR -->
+    <nav class="fixed w-full z-50 top-0 transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 relative flex items-center justify-center drop-shadow-md">
+                        <svg class="w-full h-full" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="64" height="64" rx="16" fill="url(#navGrad)"/>
+                            <path d="M22 16V48" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M22 18H36C42 18 47 23 47 29C47 35 42 40 36 40H22" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M15 30H32" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6366F1"/>
+                                    <stop offset="100%" stop-color="#4F46E5"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="font-bold text-2xl tracking-tight text-slate-900">PayrollSync</span>
                 </div>
-            </div>
-            <h2 class="text-2xl font-bold text-center text-slate-800 mb-2" id="auth-title">Welcome to PaySync</h2>
-            <p class="text-sm text-center text-slate-500 mb-6" id="auth-subtitle">Sign in to your account</p>
-
-            <form id="auth-form" class="space-y-4">
-                <div id="auth-name-group" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
-                    <input type="text" id="auth-name" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
-                    <input type="email" id="auth-email" required class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                    <input type="password" id="auth-password" required minlength="6" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <button type="submit" id="auth-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition-colors shadow-sm cursor-pointer">
-                    Sign In
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-sm">
-                <span class="text-slate-500" id="auth-switch-text">Don't have an account?</span>
-                <button id="auth-switch-btn" type="button" class="text-indigo-600 font-semibold hover:underline ml-1 cursor-pointer">Register</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- MAIN DASHBOARD SCREEN                          -->
-    <!-- ============================================== -->
-    <div id="dashboard-screen" class="hidden h-screen w-full flex bg-slate-50">
-        
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-10 select-none shadow-sm shrink-0">
-            <div class="h-16 flex items-center px-6 border-b border-slate-200 shrink-0">
-                <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 mr-3">
-                    <span class="text-indigo-600 font-bold text-sm">₱</span>
-                </div>
-                <div class="flex flex-col justify-center mt-1">
-                    <span class="text-xl font-bold tracking-tight text-slate-900 leading-none">PaySync</span>
-                    <span id="sidebar-company-name" class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mt-1">Company Name</span>
-                </div>
-            </div>
-            
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
-                <p class="text-sm font-bold text-indigo-700" id="sidebar-greeting">Hi Admin!</p>
-                <p class="text-xs text-slate-500 mt-1" id="sidebar-role">Role</p>
-            </div>
-            
-            <nav class="flex-1 py-4 flex flex-col overflow-y-auto">
-                <button id="btn-employee" class="w-full flex items-center px-6 py-3 text-sm tab-active transition-colors cursor-pointer">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    Employee Data
-                </button>
-                <button id="btn-payroll" class="w-full flex items-center px-6 py-3 text-sm font-medium tab-inactive transition-colors mt-1 cursor-pointer">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                    Payroll Timesheet
-                </button>
-                <button id="btn-bonuses" class="w-full flex items-center px-6 py-3 text-sm font-medium tab-inactive transition-colors mt-1 cursor-pointer">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 11-4 0 2 2 0 014 0zM19 12a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    13th Month Pay
-                </button>
                 
-                <div class="mt-auto shrink-0">
-                    <div class="h-px bg-slate-200 mx-6 mb-2 mt-4"></div>
-                    <button id="btn-enterprise" style="display: none;" class="w-full flex items-center px-6 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                        Enterprise Settings
-                    </button>
-                    <!-- THE ONLY SETTINGS BUTTON BINDING -->
-                    <button id="btn-settings-nav" class="w-full flex items-center px-6 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
-                        Settings
-                    </button>
-                </div>
-            </nav>
-        </aside>
-
-        <!-- Main Workspace -->
-        <main class="flex-1 flex flex-col h-screen relative bg-slate-50">
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0">
-                <h1 id="page-title" class="text-2xl font-bold text-slate-800">Employee Data</h1>
-                <div class="flex items-center space-x-4">
-                    <div class="relative w-64">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </span>
-                        <input type="text" id="searchInput" placeholder="Search records..." class="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 placeholder-slate-400">
-                    </div>
-                    <button id="add-employee-btn" class="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Add Employee
-                    </button>
-                    <!-- LOGOUT BUTTON -->
-                    <button id="btn-logout" title="Sign Out" class="ml-4 p-2 text-slate-400 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    </button>
-                </div>
-            </header>
-
-            <div class="flex-1 overflow-auto p-8 flex flex-col">
-                
-                <!-- EMPLOYEE DATA VIEW -->
-                <div id="view-employee" class="block w-full shrink-0">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex space-x-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button id="tab-active-emp" class="px-4 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-md transition-all cursor-pointer">Active Employees</button>
-                            <button id="tab-archived-emp" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-md transition-all cursor-pointer">Archived</button>
-                        </div>
-                        <button id="bulk-action-btn" style="display: none;" class="flex items-center bg-slate-700 hover:bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm cursor-pointer">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                            Archive Selected
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                                    <th class="px-4 py-4 border-b border-slate-200 w-10 text-center">
-                                        <input type="checkbox" id="select-all-emp" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                                    </th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Name</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Status</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Email</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Position</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Shift</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200">Rates (₱/Day)</th>
-                                    <th class="px-4 py-4 font-semibold border-b border-slate-200 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="employee-tbody" class="text-sm divide-y divide-slate-100 text-slate-700">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- PAYROLL VIEW WITH DEDUCTIONS -->
-                <div id="view-payroll" class="hidden w-full shrink-0">
-                    <div class="flex flex-wrap items-center justify-between mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-4">
-                        <div class="flex items-center space-x-4 flex-wrap gap-y-3">
-                            <div class="flex items-center space-x-2">
-                                <label class="text-sm font-medium text-slate-500">Payroll Type:</label>
-                                <select id="payroll-type" class="bg-white border border-slate-300 text-slate-800 py-1.5 px-3 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                                    <option value="weekly" selected>Weekly</option>
-                                    <option value="biweekly">Bi-Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <label class="text-sm font-medium text-slate-500">Period Start:</label>
-                                <input type="date" id="period-start" class="bg-white border border-slate-300 text-slate-800 py-1.5 px-3 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <label class="text-sm font-medium text-slate-500">Period End:</label>
-                                <input type="date" id="period-end" class="bg-white border border-slate-300 text-slate-800 py-1.5 px-3 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                            </div>
-                            <div class="h-6 w-px bg-slate-200 hidden md:block"></div>
-                            <div class="flex items-center space-x-2">
-                                <label class="text-sm font-medium text-slate-500">Payout Date:</label>
-                                <input type="date" id="payout-date" class="bg-slate-50 border border-slate-300 text-emerald-600 font-bold py-1.5 px-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <!-- Advance Settings Gear for Govt Rates -->
-                            <button id="btn-advance-settings" class="text-slate-400 hover:text-slate-600 border border-slate-200 bg-white p-2 rounded-lg shadow-sm cursor-pointer" title="Adjust Government Deductions">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
-                            </button>
-                            <button id="btn-generate-timesheet" class="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Generate Timesheet
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
-                        <table class="w-full text-left border-collapse min-w-[900px]">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                                    <th class="px-4 py-4 font-semibold w-1/5">Employee Name</th>
-                                    <th class="px-4 py-4 font-semibold text-center">Total Hours</th>
-                                    <th class="px-4 py-4 font-semibold text-center">Gross Pay (₱)</th>
-                                    <th class="px-4 py-4 font-semibold text-center text-rose-500">Deductions (Gov)</th>
-                                    <th class="px-4 py-4 font-semibold text-center text-emerald-600">Net Pay (₱)</th>
-                                    <th class="px-4 py-4 font-semibold text-center w-64">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="timesheet-tbody" class="text-sm divide-y divide-slate-100">
-                                <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No timesheets yet. Set Period Start and End, then click "Generate Timesheet".</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- BONUSES VIEW -->
-                <div id="view-bonuses" class="hidden w-full shrink-0">
-                    <div class="mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <h2 class="text-lg font-bold text-slate-800">13th Month Pay Computation</h2>
-                        <p class="text-sm text-slate-500 mt-1">Total Basic Salary earned during the year ÷ 12</p>
-                    </div>
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
-                        <table class="w-full text-left border-collapse min-w-[800px]">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                                    <th class="px-6 py-4 font-semibold w-1/4">Employee Name</th>
-                                    <th class="px-6 py-4 font-semibold">Status</th>
-                                    <th class="px-6 py-4 font-semibold">YTD Basic Salary (₱)</th>
-                                    <th class="px-6 py-4 font-semibold text-emerald-600">13th Month Pay (₱)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bonuses-tbody" class="text-sm divide-y divide-slate-100">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ENTERPRISE VIEW (FULL PAGE) -->
-                <div id="view-enterprise" class="hidden w-full shrink-0 flex-col">
-                    <div class="flex space-x-4 border-b border-slate-200 mb-6">
-                        <button id="ent-tab-plan" class="px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer">Plan Management</button>
-                        <button id="ent-tab-users" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold cursor-pointer">System Users</button>
-                        <button id="ent-tab-db" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold cursor-pointer">Database Status</button>
-                        <!-- ADDED TAB ACCESS BUTTON -->
-                        <button id="ent-tab-access" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold cursor-pointer">Tab Access</button>
-                    </div>
-
-                    <!-- PLAN TAB -->
-                    <div id="ent-content-plan" class="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200 bg-slate-50">
-                                    <th class="py-4 px-6 font-semibold">Name</th>
-                                    <th class="py-4 px-6 font-semibold">Email Address</th>
-                                    <th class="py-4 px-6 font-semibold">Active Plan</th>
-                                    <th class="py-4 px-6 font-semibold text-center w-48">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ent-plan-tbody" class="text-sm text-slate-700 divide-y divide-slate-100">
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- USERS TAB -->
-                    <div id="ent-content-users" class="hidden bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200 bg-slate-50">
-                                    <th class="py-4 px-6 font-semibold">Name</th>
-                                    <th class="py-4 px-6 font-semibold">Email Address</th>
-                                    <th class="py-4 px-6 font-semibold">System Role</th>
-                                    <th class="py-4 px-6 font-semibold text-center w-48">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ent-users-tbody" class="text-sm text-slate-700 divide-y divide-slate-100">
-                            </tbody>
-                        </table>
-                    </div>
-					
-					<!-- TAB ACCESS (GLOBAL SETTINGS) -->
-                    <div id="ent-content-access" class="hidden bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                        <h4 class="text-lg font-bold text-slate-800 mb-2">Global System Tabs</h4>
-                        <p class="text-sm text-slate-500 mb-6">Select the tabs you want to make available across the system. If a tab is unchecked, it will be hidden from the sidebar menu.</p>
-                        <div class="space-y-4">
-                            <label class="flex items-center space-x-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <input type="checkbox" id="global-tab-employee" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-5 h-5">
-                                <span class="text-sm font-bold text-slate-700">Employee Data Tab</span>
-                            </label>
-                            <label class="flex items-center space-x-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <input type="checkbox" id="global-tab-payroll" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-5 h-5">
-                                <span class="text-sm font-bold text-slate-700">Payroll Timesheet Tab</span>
-                            </label>
-                            <label class="flex items-center space-x-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <input type="checkbox" id="global-tab-bonuses" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-5 h-5">
-                                <span class="text-sm font-bold text-slate-700">13th Month Pay Tab</span>
-                            </label>
-                        </div>
-                        <div class="mt-6 border-t border-slate-200 pt-4 text-right">
-                            <button id="save-global-tabs-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-sm cursor-pointer">Save & Apply Changes</button>
-                        </div>
-                    </div>
-
-                    <!-- DATABASE TAB -->
-                    <div id="ent-content-db" class="hidden">
-                        <div class="grid grid-cols-3 gap-6 mb-6">
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-                                <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Users</h4>
-                                <p class="text-4xl font-bold text-indigo-600 mt-2" id="db-stat-users">0</p>
-                            </div>
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-                                <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Employees</h4>
-                                <p class="text-4xl font-bold text-emerald-600 mt-2" id="db-stat-emps">0</p>
-                            </div>
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-                                <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Timesheet Records</h4>
-                                <p class="text-4xl font-bold text-amber-500 mt-2" id="db-stat-ts">0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <footer class="mt-auto pt-10 pb-2 w-full text-xs text-slate-400 shrink-0">
-                    <div class="border-t border-slate-200 pt-6 flex flex-col md:flex-row items-center justify-between">
-                        <div class="flex flex-wrap justify-center gap-4 mb-4 md:mb-0">
-                            <button onclick="showFooterModal('terms')" class="hover:text-slate-600 transition-colors cursor-pointer">Terms</button>
-                            <button onclick="showFooterModal('privacy')" class="hover:text-slate-600 transition-colors cursor-pointer">Privacy & Security</button>
-                            <button onclick="showFooterModal('cookies')" class="hover:text-slate-600 transition-colors cursor-pointer">Cookies</button>
-                            <button onclick="showFooterModal('support')" class="hover:text-slate-600 transition-colors cursor-pointer">Support</button>
-                            <button onclick="showFooterModal('license')" class="hover:text-slate-600 transition-colors cursor-pointer">Licensed Content</button>
-                            <button onclick="showFooterModal('about')" class="hover:text-slate-600 transition-colors cursor-pointer">About Us</button>
-                        </div>
-                        <div class="text-center md:text-right">
-                            &copy; 2026 Zjar PaySync &middot; RTX Creations. All rights reserved.
-                        </div>
-                    </div>
-                </footer>
-            </div>
-        </main>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- MODALS SECTION (STRICTLY LIGHT MODE)           -->
-    <!-- ============================================== -->
-
-    <!-- ADVANCE SETTINGS (GOVERNMENT DEDUCTIONS) -->
-    <div id="advance-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-xl w-96 shadow-2xl overflow-hidden flex flex-col">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h3 class="text-lg font-bold text-slate-800">Gov't Deductions</h3>
-                <button id="close-advance-btn" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 space-y-4 bg-white">
-                <p class="text-xs text-slate-500 mb-2">Set up fixed deduction amounts applied to Gross Pay.</p>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">SSS Contribution (Fixed ₱)</label>
-                    <input type="number" id="adv-sss" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500" value="0">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">PhilHealth Contribution (Fixed ₱)</label>
-                    <input type="number" id="adv-ph" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500" value="0">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Pag-IBIG Contribution (Fixed ₱)</label>
-                    <input type="number" id="adv-pagibig" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500" value="0">
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50 mt-auto">
-                <button id="cancel-advance-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-                <button id="save-advance-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white transition-colors shadow-sm cursor-pointer">Save Rates</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- EMPLOYEE MODAL (Add/Edit) -->
-    <div id="employee-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl w-96 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h3 class="text-lg font-bold text-slate-800" id="modal-title">Add Employee</h3>
-                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 space-y-4 overflow-y-auto bg-white">
-                <input type="hidden" id="emp-id">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
-                    <input type="text" id="emp-name" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
-                    <input type="email" id="emp-email" placeholder="example@email.com" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-                    <select id="emp-status" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                        <option value="Active">Active</option>
-                        <option value="InActive">InActive</option>
-                        <option value="Resigned">Resigned</option>
-                        <option value="Terminated">Terminated</option>
-                    </select>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-slate-600">Position</label>
-                        <button id="manage-pos-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer">Manage</button>
-                    </div>
-                    <select id="emp-position" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Shift Schedule</label>
-                    <div class="flex items-center space-x-2">
-                        <input type="time" id="emp-shift-start" class="w-1/2 bg-white border border-slate-300 rounded-md px-2 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500" value="08:00">
-                        <span class="text-slate-400 text-xs">to</span>
-                        <input type="time" id="emp-shift-end" class="w-1/2 bg-white border border-slate-300 rounded-md px-2 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500" value="17:00">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Daily Rate (₱/Day)</label>
-                    <input type="number" id="emp-rate" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50 mt-auto">
-                <button id="cancel-modal-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-                <button id="save-emp-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white transition-colors shadow-sm cursor-pointer">Save Data</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SETTINGS MODAL -->
-    <div id="settings-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-xl w-[600px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="text-lg font-bold text-slate-800">Company Settings</h3>
-                <button id="close-settings-btn" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <div class="flex space-x-4 border-b border-slate-200 px-6 pt-2 bg-white shrink-0">
-                <button id="set-tab-general" class="px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer">General</button>
-                <button id="set-tab-access" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer">Access Role</button>
-                <button id="set-tab-users" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer">Manage Users</button>
-                <button id="set-tab-plan" class="px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer">Plan Details</button>
-            </div>
-
-            <div class="p-6 space-y-4 bg-white overflow-y-auto flex-1" id="set-content-general">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Company Name</label>
-                    <input type="text" id="set-name" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Company Logo (Upload via GAS)</label>
-                    <input type="file" id="set-logo-file" accept="image/*" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                    <p id="upload-status" class="text-xs text-indigo-600 mt-1 font-medium hidden">Uploading to Google Drive...</p>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Address</label>
-                    <input type="text" id="set-address" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Phone #</label>
-                    <input type="text" id="set-phone" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-            </div>
-
-            <div class="p-6 space-y-4 bg-white overflow-y-auto flex-1 hidden" id="set-content-access">
-                <p class="text-xs text-slate-500 mb-4">Select which modules users with the <strong>"Staff"</strong> role can access:</p>
-                <div class="space-y-3">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="access-employee" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4">
-                        <span class="text-sm font-medium text-slate-700">Employee Data</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="access-payroll" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4">
-                        <span class="text-sm font-medium text-slate-700">Payroll Timesheet</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="access-bonuses" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4">
-                        <span class="text-sm font-medium text-slate-700">Bonuses (13th Month)</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="access-settings" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4">
-                        <span class="text-sm font-medium text-slate-700">Company Settings</span>
-                    </label>
-                </div>
-            </div>
-			
-			<!-- MANAGE USERS TAB CONTENT -->
-            <div class="p-6 space-y-4 bg-white overflow-y-auto flex-1 hidden" id="set-content-users" style="display: none;">
-                <p class="text-xs text-slate-500 mb-2">Manage all registered users under this company workspace.</p>
-                <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200 bg-slate-50">
-                                <th class="py-3 px-4 font-semibold">Name</th>
-                                <th class="py-3 px-4 font-semibold">Email</th>
-                                <th class="py-3 px-4 font-semibold">System Role</th>
-                                <th class="py-3 px-4 font-semibold text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="company-users-tbody" class="text-sm text-slate-700 divide-y divide-slate-100">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-			
-			<!-- PLAN DETAILS TAB CONTENT -->
-<div class="p-6 space-y-4 bg-white overflow-y-auto flex-1" id="set-content-plan" style="display: none;">
-    <div class="grid grid-cols-3 gap-4">
-        <!-- Trial Plan Card -->
-        <div class="border border-slate-200 rounded-xl p-4 flex flex-col justify-between bg-slate-50">
-            <div>
-                <span class="text-xs font-bold text-slate-500 uppercase">Current</span>
-                <h4 class="text-lg font-bold text-slate-800 mt-1">Trial Plan</h4>
-                <p class="text-2xl font-bold text-slate-900 mt-2">₱0 <span class="text-xs text-slate-500 font-normal">/ 7 days</span></p>
-                <ul class="text-xs text-slate-600 space-y-2 mt-4">
-                    <li>✓ 5 Employees Limit</li>
-                    <li>✓ Standard Timesheet</li>
-                    <li>✗ No Mailer Support</li>
-                    <li>✗ Limited Access Roles</li>
-                </ul>
-            </div>
-            <button disabled class="w-full mt-6 py-2 bg-slate-200 text-slate-500 rounded-lg text-xs font-bold cursor-not-allowed">Active Plan</button>
-        </div>
-
-        <!-- Pro Plan Card -->
-        <div class="border-2 border-indigo-500 rounded-xl p-4 flex flex-col justify-between bg-white shadow-sm relative">
-            <span class="absolute -top-3 right-4 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">POPULAR</span>
-            <div>
-                <span class="text-xs font-bold text-indigo-600 uppercase">Upgrade</span>
-                <h4 class="text-lg font-bold text-slate-800 mt-1">PaySync Pro</h4>
-                <p class="text-2xl font-bold text-slate-900 mt-2">₱499 <span class="text-xs text-slate-500 font-normal">/ month</span></p>
-                <ul class="text-xs text-slate-600 space-y-2 mt-4">
-                    <li>✓ Up to 50 Employees</li>
-                    <li>✓ Custom Shift Schedules</li>
-                    <li>✓ Auto Gov't Deductions</li>
-                    <li>✓ Email Timesheet via GAS</li>
-                </ul>
-            </div>
-            <button onclick="openPaymentModal('PaySync Pro', 499)" class="w-full mt-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors">Upgrade to Pro</button>
-        </div>
-
-        <!-- Blaze Plan Card -->
-        <div class="border border-rose-300 rounded-xl p-4 flex flex-col justify-between bg-rose-50/30">
-            <div>
-                <span class="text-xs font-bold text-rose-600 uppercase">Enterprise</span>
-                <h4 class="text-lg font-bold text-slate-800 mt-1">PaySync Blaze</h4>
-                <p class="text-2xl font-bold text-slate-900 mt-2">₱1,499 <span class="text-xs text-slate-500 font-normal">/ month</span></p>
-                <ul class="text-xs text-slate-600 space-y-2 mt-4">
-                    <li>✓ Unlimited Employees</li>
-                    <li>✓ Full Enterprise Control</li>
-                    <li>✓ Dedicated Support</li>
-                    <li>✓ Unlimited Storage & Logs</li>
-                </ul>
-            </div>
-            <button onclick="openPaymentModal('PaySync Blaze', 1499)" class="w-full mt-6 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors">Upgrade to Blaze</button>
-        </div>
-    </div>
-</div>
-
-<div class="px-6 py-4 border-t border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <button type="button" onclick="window.copyInviteLink()" class="px-4 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-semibold transition-colors cursor-pointer">Copy Invite Link</button>
-                <div class="flex space-x-3">
-                    <button id="cancel-settings-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-                    <button id="save-settings-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white shadow-sm cursor-pointer">Save Settings</button>
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#features" class="text-slate-500 hover:text-brand-600 font-medium transition-colors">Features</a>
+                    <a href="#pricing" class="text-slate-500 hover:text-brand-600 font-medium transition-colors">Pricing</a>
+                    <!-- LINK TO DASHBOARD APP -->
+                    <a href="/app" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Sign In</a>
+                    <a href="/app" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-0.5">Start Free Trial</a>
                 </div>
             </div>
         </div>
-    </div> <!-- ISINARA NA ANG OUTER SETTINGS MODAL -->
+    </nav>
 
-    <!-- EDIT SYSTEM USER MODAL (NAME + ROLE/PLAN) -->
-    <div id="edit-sysuser-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[70] p-4">
-        <div class="bg-white rounded-xl w-96 p-6 shadow-2xl border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-800 mb-4" id="edit-sysuser-title">Edit Details</h3>
-            <input type="hidden" id="edit-sysuser-id">
-            <input type="hidden" id="edit-sysuser-mode"> 
-            
-            <div class="mb-4">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Name</label>
-                <input type="text" id="edit-sysuser-name" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-            </div>
-
-            <div id="edit-sys-role-container" class="mb-6 hidden">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">System Role</label>
-                <select id="edit-sysuser-role" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                    <option value="System Developer">System Developer</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Staff">Staff</option>
-                </select>
-            </div>
-
-            <div id="edit-sys-plan-container" class="mb-6 hidden">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Active Plan</label>
-                <select id="edit-sysuser-plan" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                    <option value="Trial (7 days)">Trial (7 days)</option>
-                    <option value="Pro">Pro</option>
-                    <option value="Enterprise">Enterprise</option>
-                </select>
-            </div>
-
-            <div class="flex justify-end space-x-3">
-                <button onclick="document.getElementById('edit-sysuser-modal').style.display='none'" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 cursor-pointer">Cancel</button>
-                <button id="save-sysuser-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white cursor-pointer shadow-sm">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- DAILY TIMESHEET MODAL -->
-    <div id="daily-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-xl w-[900px] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <div class="flex items-center space-x-4">
-                    <h3 class="text-lg font-bold text-slate-800" id="daily-modal-title">Timesheet Breakdown</h3>
-                    <!-- ADD TIMESHEET LINE BUTTON -->
-                    <button id="add-timesheet-line-btn" class="text-xs font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors border border-indigo-200 flex items-center cursor-pointer">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Add Timesheet
-                    </button>
-                </div>
-                <button id="close-daily-btn" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 bg-white">
-                <input type="hidden" id="daily-emp-id">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                            <th class="pb-3 font-semibold w-40">Date</th>
-                            <th class="pb-3 font-semibold px-2">Time In</th>
-                            <th class="pb-3 font-semibold px-2">Time Out</th>
-                            <th class="pb-3 font-semibold px-2 w-24">OT (Hrs)</th>
-                            <th class="pb-3 font-semibold px-2 text-center w-24">Duration</th>
-                            <th class="pb-3 font-semibold px-2 text-center w-32">Rates (₱)</th>
-                            <th class="pb-3 font-semibold px-2 text-center w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="daily-tbody" class="text-sm text-slate-700">
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50 shrink-0">
-                <button id="cancel-daily-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-                <button id="save-daily-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium text-white shadow-sm cursor-pointer">Save & Compute</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER CONTENT MODAL -->
-    <div id="footer-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[70] p-4">
-        <div class="bg-white rounded-xl w-[500px] shadow-2xl flex flex-col max-h-[80vh] overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="text-lg font-bold text-slate-800" id="footer-modal-title">Title</h3>
-                <button onclick="document.getElementById('footer-modal').style.display='none'" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto text-sm text-slate-600 leading-relaxed bg-white flex-1" id="footer-modal-body">
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 text-right bg-slate-50 shrink-0">
-                <button onclick="document.getElementById('footer-modal').style.display='none'" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-sm font-medium transition-colors cursor-pointer">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MANAGE POSITIONS MODAL -->
-    <div id="manage-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[70] p-4">
-        <div class="bg-white border border-slate-200 rounded-xl w-96 p-6 shadow-2xl">
-            <h3 class="text-lg font-bold text-slate-800 mb-2" id="manage-modal-title">Manage</h3>
-            <input type="text" id="manage-input" placeholder="Type new option..." class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500 mb-4">
-            <div class="flex justify-end space-x-3">
-                <button id="close-manage-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 cursor-pointer">Cancel</button>
-                <button id="save-manage-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white cursor-pointer">Add</button>
-            </div>
-        </div>
-    </div>
-	
-	<!-- PAYMENT CHECKOUT MODAL -->
-<div id="payment-modal" style="display: none;" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[80] p-4">
-    <div class="bg-white rounded-xl w-[450px] shadow-2xl overflow-hidden flex flex-col border border-slate-200">
-        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <h3 class="text-lg font-bold text-slate-800" id="pay-modal-title">Checkout</h3>
-            <button onclick="document.getElementById('payment-modal').style.display='none'" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+    <!-- HERO SECTION -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-100 via-slate-50 to-white opacity-70"></div>
         </div>
         
-        <form id="payment-form" class="p-6 space-y-4 bg-white">
-            <input type="hidden" id="pay-plan-name">
-            <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 flex justify-between items-center">
-                <span class="text-xs font-semibold text-indigo-900" id="pay-selected-plan">Selected Plan</span>
-                <span class="text-sm font-bold text-indigo-700" id="pay-selected-price">₱0/mo</span>
-            </div>
-
-            <!-- Payment Method Toggle -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Payment Method</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" id="pay-method-card" class="py-2 border-2 border-indigo-600 text-indigo-600 font-bold rounded-lg text-xs flex items-center justify-center cursor-pointer">Credit / Debit Card</button>
-                    <button type="button" id="pay-method-paypal" class="py-2 border border-slate-300 text-slate-600 font-semibold rounded-lg text-xs flex items-center justify-center cursor-pointer hover:bg-slate-50">PayPal</button>
-                </div>
-            </div>
-
-            <!-- Card Inputs -->
-            <div id="card-fields" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Cardholder Name</label>
-                    <input type="text" required placeholder="Juan Dela Cruz" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Card Number</label>
-                    <input type="text" required maxlength="19" placeholder="4532 •••• •••· 8890" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                </div>
-                <div class="flex space-x-2">
-                    <div class="w-1/2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Expiry (MM/YY)</label>
-                        <input type="text" required placeholder="12/28" maxlength="5" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Text Content -->
+                <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-600 text-sm font-semibold mb-6">
+                        <span class="flex h-2 w-2 rounded-full bg-brand-600 animate-pulse"></span>
+                        New: Auto Night Differential
                     </div>
-                    <div class="w-1/2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">CVV</label>
-                        <input type="password" required maxlength="4" placeholder="123" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
+                    <h1 class="text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+                        Payroll Management, <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-purple-600">Automated & Simplified.</span>
+                    </h1>
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        Say goodbye to manual Excel sheets. PayrollSync automatically calculates timesheets, night differentials, and standard deductions in just a few clicks.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="/app" class="flex justify-center items-center bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-brand-500/30 transition-all hover:-translate-y-1">
+                            Start for Free
+                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                        <a href="#pricing" class="flex justify-center items-center bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:-translate-y-1 shadow-sm">
+                            View Plans
+                        </a>
                     </div>
+                    <p class="mt-4 text-sm text-slate-400">No credit card required for 7-day trial.</p>
                 </div>
-            </div>
 
-            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-md transition-colors cursor-pointer mt-4">Confirm & Pay</button>
-        </form>
-    </div>
-</div>
-
-<!-- CUSTOM INVITE LINK MODAL -->
-    <div id="invite-modal" style="display: none;" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[100] p-4">
-        <div class="bg-white rounded-xl w-96 shadow-2xl overflow-hidden flex flex-col border border-slate-200 p-6 text-center">
-            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Invite Link Copied!</h3>
-            <p class="text-sm text-slate-500 mb-4">Send this link to your team members so they can securely join your company's workspace.</p>
-            <input type="text" id="invite-link-display" readonly class="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-600 text-xs text-center mb-6 focus:outline-none">
-            <button onclick="document.getElementById('invite-modal').style.display='none'" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer">Got it</button>
-        </div>
-    </div>
-	
-	<!-- ADD DATE MODAL FOR TIMESHEET -->
-    <div id="add-date-modal" style="display: none;" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[70] p-4">
-        <div class="bg-white rounded-xl w-80 shadow-2xl overflow-hidden flex flex-col border border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Select Date</h3>
-            <input type="date" id="new-ts-date" class="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-slate-800 text-sm focus:outline-none focus:border-indigo-500 mb-6">
-            <div class="flex justify-end space-x-3">
-                <button onclick="document.getElementById('add-date-modal').style.display='none'" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-                <button id="confirm-add-date-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-sm cursor-pointer">Add Date</button>
-            </div>
-        </div>
-    </div>
-
-<!-- ENTERPRISE SETTINGS MODAL (LARGE FULL SCREEN) -->
-    <div id="enterprise-modal" style="display: none;" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-xl w-full max-w-5xl h-[85vh] shadow-2xl overflow-hidden flex flex-col border border-slate-200">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-rose-50 shrink-0">
-                <h3 class="text-xl font-bold text-rose-700">Enterprise Settings</h3>
-                <div class="flex items-center space-x-3">
-                    <button onclick="copyInviteLink()" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-bold transition-colors cursor-pointer shadow-sm">Copy Invite Link</button>
-                    <button id="close-enterprise-btn" class="text-slate-400 hover:text-slate-600 cursor-pointer">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                <!-- Hero Illustration (SVG) -->
+                <div class="relative hidden lg:block">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-brand-500 to-purple-500 rounded-[3rem] blur-3xl opacity-20 animate-pulse"></div>
+                    <svg viewBox="0 0 600 500" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 w-full h-auto drop-shadow-2xl">
+                        <!-- Dashboard Base -->
+                        <rect x="20" y="50" width="560" height="400" rx="24" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+                        <rect x="20" y="50" width="560" height="60" rx="24" fill="#F8FAFC" />
+                        <!-- Mock Sidebar -->
+                        <rect x="20" y="110" width="140" height="340" fill="#F1F5F9" />
+                        <rect x="40" y="140" width="100" height="12" rx="6" fill="#CBD5E1"/>
+                        <rect x="40" y="170" width="80" height="12" rx="6" fill="#E2E8F0"/>
+                        <rect x="40" y="200" width="90" height="12" rx="6" fill="#E2E8F0"/>
+                        <!-- Data Bars -->
+                        <rect x="190" y="140" width="350" height="40" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+                        <rect x="190" y="200" width="350" height="40" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+                        <rect x="190" y="260" width="350" height="40" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+                        <!-- Accent Elements -->
+                        <circle cx="215" cy="160" r="10" fill="#6366F1"/>
+                        <circle cx="215" cy="220" r="10" fill="#10B981"/>
+                        <circle cx="215" cy="280" r="10" fill="#F59E0B"/>
+                        <!-- Floating Payslip Card -->
+                        <g transform="translate(350, 150)">
+                            <rect width="220" height="280" rx="16" fill="white" stroke="#E2E8F0" stroke-width="2" filter="drop-shadow(0px 20px 25px rgba(0,0,0,0.1))"/>
+                            <rect x="20" y="20" width="40" height="40" rx="12" fill="#EEF2FF"/>
+                            <path d="M40 30L40 50M30 40L50 40" stroke="#6366F1" stroke-width="4" stroke-linecap="round"/>
+                            <rect x="80" y="30" width="100" height="10" rx="5" fill="#1E293B"/>
+                            <rect x="80" y="45" width="60" height="8" rx="4" fill="#94A3B8"/>
+                            <line x1="20" y1="80" x2="200" y2="80" stroke="#F1F5F9" stroke-width="2"/>
+                            <!-- Chart inside card -->
+                            <rect x="20" y="100" width="180" height="120" rx="8" fill="#F8FAFC"/>
+                            <path d="M40 180 L80 140 L120 160 L180 110" stroke="#10B981" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="180" cy="110" r="6" fill="#10B981"/>
+                            <rect x="20" y="240" width="180" height="20" rx="6" fill="#4F46E5"/>
+                        </g>
+                    </svg>
                 </div>
             </div>
         </div>
-    </div> <!-- ISINARA NA RIN ANG ENTERPRISE MODAL -->
+    </section>
 
-    <!-- PRINT SECTION (HIDDEN) -->
-    <div id="print-section" class="hidden font-sans">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img id="print-logo" src="" alt="Company Logo" style="max-height: 60px; display: none; margin: 0 auto 10px;">
-            <h2 id="print-company-name" style="margin: 0; font-size: 24px; font-weight: bold; color: #1e293b;">Company Name</h2>
-            <p id="print-address" style="margin: 4px 0; font-size: 14px; color: #475569;">Address</p>
-            <p id="print-phone" style="margin: 0; font-size: 14px; color: #475569;">Phone</p>
+    <!-- FEATURES SECTION -->
+    <section id="features" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Why Choose PayrollSync?</h2>
+                <h3 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Everything you need to run payroll in minutes, not days.</h3>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-xl transition-shadow duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 text-brand-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-3">Smart Time Tracking</h4>
+                    <p class="text-slate-600 leading-relaxed">Automatically deducts break times and strictly calculates Night Differential hours with precise premiums.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-xl transition-shadow duration-300">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-3">Automated Deductions</h4>
+                    <p class="text-slate-600 leading-relaxed">Liquidated display of all standard deductions. Fully automated year-to-date accumulation for highly accurate payroll records.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-xl transition-shadow duration-300">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-3">1-Click Payslip Mailer</h4>
+                    <p class="text-slate-600 leading-relaxed">Generate beautiful, itemized payslip previews and email them directly to your employees' inbox securely in one click.</p>
+                </div>
+            </div>
         </div>
-        <hr style="border-top: 2px solid #e2e8f0; margin-bottom: 20px;">
-        <h3 style="text-align: center; font-size: 18px; margin-bottom: 10px; color: #0f172a;">PAYROLL TIMESHEET</h3>
-        <p style="text-align: center; font-size: 14px; margin-bottom: 20px; color: #475569;" id="print-period">Period: - | Payout: -</p>
-        
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-            <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
-                <th style="padding: 10px; text-align: left; font-size: 12px; color: #475569; text-transform: uppercase;">Employee Name</th>
-                <th style="padding: 10px; text-align: center; font-size: 12px; color: #475569; text-transform: uppercase;">Total Hrs</th>
-                <th style="padding: 10px; text-align: center; font-size: 12px; color: #475569; text-transform: uppercase;">Gross Pay</th>
-                <th style="padding: 10px; text-align: center; font-size: 12px; color: #475569; text-transform: uppercase;">Deductions</th>
-                <th style="padding: 10px; text-align: right; font-size: 12px; color: #475569; text-transform: uppercase;">Net Salary</th>
-            </tr>
-            <tbody id="print-tbody"></tbody>
-        </table>
-        <p style="text-align: center; font-size: 12px; color: #94a3b8; margin-top: 50px;">Printed on: <span id="print-timestamp"></span></p>
-    </div>
+    </section>
 
-    <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" style="display: none;" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[100]">
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-3 shadow-2xl">
-            <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <span class="text-sm font-medium text-slate-800" id="loading-text">Loading...</span>
+    <!-- PRICING SECTION -->
+    <section id="pricing" class="py-24 bg-slate-50 relative overflow-hidden border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">Simple, transparent pricing.</h2>
+                <p class="text-slate-600 text-lg">Choose the plan that best fits your business size. Upgrade anytime.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
+                <!-- Trial Plan -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-800">Trial</h3>
+                    <div class="mt-4 mb-6">
+                        <span class="text-4xl font-extrabold text-slate-900">₱0</span>
+                        <span class="text-slate-500">/ 7 days</span>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-6">Perfect for testing the waters and seeing the magic.</p>
+                    <a href="/app" class="block w-full py-3 px-4 bg-brand-50 text-brand-700 hover:bg-brand-100 text-center rounded-xl font-bold transition-colors">Start Trial</a>
+                    <ul class="mt-8 space-y-4 text-sm text-slate-600">
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 5 Employees</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Standard Timesheet</li>
+                        <li class="flex items-center gap-3 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> No Mailer Support</li>
+                    </ul>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-white rounded-3xl p-8 border-2 border-brand-500 relative transform scale-105 shadow-xl shadow-brand-200">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Most Popular</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-700">PayrollSync Pro</h3>
+                    <div class="mt-4 mb-6">
+                        <span class="text-5xl font-extrabold text-slate-900">₱499</span>
+                        <span class="text-slate-500">/ month</span>
+                    </div>
+                    <p class="text-slate-600 text-sm mb-6">For growing SMEs that need full payroll automation.</p>
+                    <a href="/app" class="block w-full py-3 px-4 bg-brand-600 text-white hover:bg-brand-700 text-center rounded-xl font-bold transition-colors shadow-lg">Get Pro</a>
+                    <ul class="mt-8 space-y-4 text-sm text-slate-700">
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 50 Employees</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Custom Shift Schedules</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Automated Deductions</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 1-Click Email Payslips</li>
+                    </ul>
+                </div>
+
+                <!-- Blaze Plan -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                    <h3 class="text-xl font-bold text-rose-600">PayrollSync Blaze</h3>
+                    <div class="mt-4 mb-6">
+                        <span class="text-4xl font-extrabold text-slate-900">₱1,499</span>
+                        <span class="text-slate-500">/ month</span>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-6">Enterprise-grade features for unlimited scaling.</p>
+                    <a href="/app" class="block w-full py-3 px-4 bg-rose-50 text-rose-700 hover:bg-rose-100 text-center rounded-xl font-bold transition-colors">Contact Sales</a>
+                    <ul class="mt-8 space-y-4 text-sm text-slate-600">
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Unlimited Employees</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Full Enterprise Control</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Dedicated Priority Support</li>
+                        <li class="flex items-center gap-3"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Unlimited Storage & Logs</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-600 font-bold">₱</div>
+                <span class="font-bold text-xl text-slate-800">PayrollSync</span>
+            </div>
+            <div class="text-sm text-slate-500">
+                &copy; 2026 Zjar PayrollSync &middot; RTX Creations. All rights reserved.
+            </div>
+        </div>
+    </footer>
 
-    <script>
-        // ==============================================================
-        // GLOBAL UI & SAFE FUNCTIONS (DO NOT PUT IN ASYNC)
-        // ==============================================================
-        window.showLoading = function(text) {
-            document.getElementById('loading-text').innerText = text;
-            document.getElementById('loading-overlay').style.display = 'flex';
-        }
-        window.hideLoading = function() {
-            document.getElementById('loading-overlay').style.display = 'none';
-        }
-		
-		
-
-        const GAS_WEB_APP_URL = "PASTE_YOUR_GAS_URL_HERE"; 
-        
-        window.currentTab = 'employee';
-        window.showingArchived = false;
-        window.editMode = false;
-
-        // TABS
-        document.getElementById('btn-employee').addEventListener('click', () => switchTab('employee'));
-        document.getElementById('btn-payroll').addEventListener('click', () => switchTab('payroll'));
-        document.getElementById('btn-bonuses').addEventListener('click', () => switchTab('bonuses'));
-        document.getElementById('btn-enterprise').addEventListener('click', () => switchTab('enterprise'));
-		
-		document.getElementById('add-employee-btn').addEventListener('click', () => {
-            window.editMode = false;
-            document.getElementById('modal-title').innerText = "Add Employee";
-            document.getElementById('emp-id').value = '';
-            document.getElementById('emp-name').value = '';
-            document.getElementById('emp-email').value = '';
-            document.getElementById('emp-rate').value = '';
-            document.getElementById('employee-modal').style.display = 'flex';
-        });
-
-        function switchTab(tab) {
-            window.currentTab = tab;
-            document.getElementById('searchInput').value = '';
-            
-            const bEmp = document.getElementById('btn-employee');
-            const bPay = document.getElementById('btn-payroll');
-            const bBon = document.getElementById('btn-bonuses');
-            const bEnt = document.getElementById('btn-enterprise');
-            const bSet = document.getElementById('btn-settings-nav');
-            
-            bEmp.className = "w-full flex items-center px-6 py-3 text-sm tab-inactive transition-colors cursor-pointer";
-            bPay.className = "w-full flex items-center px-6 py-3 text-sm tab-inactive transition-colors mt-1 cursor-pointer";
-            bBon.className = "w-full flex items-center px-6 py-3 text-sm tab-inactive transition-colors mt-1 cursor-pointer";
-            if(bEnt) bEnt.className = "w-full flex items-center px-6 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer";
-
-            document.getElementById('view-employee').style.display = 'none';
-            document.getElementById('view-payroll').style.display = 'none';
-            document.getElementById('view-bonuses').style.display = 'none';
-            document.getElementById('view-enterprise').style.display = 'none';
-            document.getElementById('add-employee-btn').style.display = 'none';
-
-            if(tab === 'employee') {
-                document.getElementById('view-employee').style.display = 'block';
-                bEmp.className = "w-full flex items-center px-6 py-3 text-sm tab-active transition-colors cursor-pointer";
-                document.getElementById('page-title').innerText = "Employee Data";
-                document.getElementById('add-employee-btn').style.display = 'flex';
-                if(window.renderEmployees) window.renderEmployees();
-            } else if(tab === 'payroll') {
-                document.getElementById('view-payroll').style.display = 'block';
-                bPay.className = "w-full flex items-center px-6 py-3 text-sm tab-active transition-colors mt-1 cursor-pointer";
-                document.getElementById('page-title').innerText = "Payroll Timesheet";
-            } else if (tab === 'bonuses') {
-                document.getElementById('view-bonuses').style.display = 'block';
-                bBon.className = "w-full flex items-center px-6 py-3 text-sm tab-active transition-colors mt-1 cursor-pointer";
-                document.getElementById('page-title').innerText = "Bonuses & 13th Month";
-                if(window.renderBonuses) window.renderBonuses();
-            } else if (tab === 'enterprise') {
-                document.getElementById('view-enterprise').style.display = 'flex';
-                if(bEnt) bEnt.className = "w-full flex items-center px-6 py-3 text-sm font-bold text-rose-800 bg-rose-100 border-r-4 border-rose-600 transition-colors cursor-pointer";
-                document.getElementById('page-title').innerText = "Enterprise Settings";
-                if(window.loadEnterpriseData) window.loadEnterpriseData();
-            }
-        }
-
-       // ==========================================
-        // SETTINGS (NAV BAR)
-        // ==========================================
-        document.getElementById('btn-settings-nav').addEventListener('click', () => {
-            document.getElementById('set-name').value = window.companySettings.name || '';
-            document.getElementById('set-address').value = window.companySettings.address || '';
-            document.getElementById('set-phone').value = window.companySettings.phone || '';
-            
-            const acc = window.companySettings.staffAccess || { employee: true, payroll: false, bonuses: false, settings: false };
-            document.getElementById('access-employee').checked = acc.employee;
-            document.getElementById('access-payroll').checked = acc.payroll;
-            document.getElementById('access-bonuses').checked = acc.bonuses;
-            document.getElementById('access-settings').checked = acc.settings;
-
-            document.getElementById('set-tab-general').click();
-            const uploadStatus = document.getElementById('upload-status');
-            if(uploadStatus) uploadStatus.classList.add('hidden');
-            document.getElementById('settings-modal').style.display = 'flex';
-        });
-
-        // ==========================================
-        // COMPANY SETTINGS TABS (4 TABS)
-        // ==========================================
-        function resetCompanySettingsTabs() {
-            const tabs = ['set-tab-general', 'set-tab-access', 'set-tab-users', 'set-tab-plan'];
-            const contents = ['set-content-general', 'set-content-access', 'set-content-users', 'set-content-plan'];
-            tabs.forEach(t => {
-                let el = document.getElementById(t);
-                if(el) el.className = "px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer";
-            });
-            contents.forEach(c => {
-                let el = document.getElementById(c);
-                if(el) el.style.display = 'none';
-            });
-        }
-
-        document.getElementById('set-tab-general').addEventListener('click', (e) => {
-            resetCompanySettingsTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer";
-            document.getElementById('set-content-general').style.display = 'block';
-        });
-
-        document.getElementById('set-tab-access').addEventListener('click', (e) => {
-            resetCompanySettingsTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer";
-            document.getElementById('set-content-access').style.display = 'block';
-        });
-
-        document.getElementById('set-tab-users').addEventListener('click', async (e) => {
-            resetCompanySettingsTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer";
-            document.getElementById('set-content-users').style.display = 'block';
-            
-            // FETCH USERS PARA SA MANAGE USERS TAB
-            const tbody = document.getElementById('company-users-tbody');
-            if(!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-center text-slate-400">Loading...</td></tr>';
-            try {
-                const snap = await window.db.collection('users').where("companyId", "==", window.currentCompanyId).get();
-                tbody.innerHTML = '';
-                if(snap.empty) return tbody.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-center text-slate-400">No users found.</td></tr>';
-                
-                snap.forEach(doc => {
-                    const u = doc.data();
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="py-3 px-4 font-medium text-slate-800">${u.name || '-'}</td>
-                            <td class="py-3 px-4 text-slate-600">${u.email}</td>
-                            <td class="py-3 px-4 font-semibold text-indigo-600">${u.systemRole || 'User'}</td>
-                            <td class="py-3 px-4">
-                                <div class="flex justify-center items-center space-x-3 whitespace-nowrap">
-                                    <button onclick="window.systemUsers=[{uid:'${doc.id}',...${JSON.stringify(u).replace(/"/g, '&quot;')} }]; window.openSysUserEdit('${doc.id}', 'role')" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold cursor-pointer">Edit</button>
-                                    <button onclick="window.deleteSysUser('${doc.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold cursor-pointer">Delete</button>
-                                </div>
-                            </td>
-                        </tr>`;
-                });
-            } catch(err) { console.log(err); }
-        });
-
-        document.getElementById('set-tab-plan').addEventListener('click', (e) => {
-            resetCompanySettingsTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer";
-            document.getElementById('set-content-plan').style.display = 'block';
-        });
-
-        // ==========================================
-        // ENTERPRISE TABS (4 TABS)
-        // ==========================================
-        function resetEntTabs() {
-            const tabs = ['ent-tab-plan', 'ent-tab-users', 'ent-tab-db', 'ent-tab-access'];
-            const contents = ['ent-content-plan', 'ent-content-users', 'ent-content-db', 'ent-content-access'];
-            tabs.forEach(t => {
-                let el = document.getElementById(t);
-                if(el) el.className = "px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold cursor-pointer";
-            });
-            contents.forEach(c => {
-                let el = document.getElementById(c);
-                if(el) el.style.display = 'none';
-            });
-        }
-
-        document.getElementById('ent-tab-plan').addEventListener('click', (e) => {
-            resetEntTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-plan').style.display = 'block';
-        });
-        document.getElementById('ent-tab-users').addEventListener('click', (e) => {
-            resetEntTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-users').style.display = 'block';
-        });
-        document.getElementById('ent-tab-db').addEventListener('click', (e) => {
-            resetEntTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-db').style.display = 'block';
-        });
-        document.getElementById('ent-tab-access').addEventListener('click', (e) => {
-            resetEntTabs(); 
-            e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-access').style.display = 'block';
-        });
-
-        // MODAL CLOSERS
-        document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('employee-modal').style.display = 'none');
-        document.getElementById('cancel-modal-btn').addEventListener('click', () => document.getElementById('employee-modal').style.display = 'none');
-        document.getElementById('close-settings-btn').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'none');
-        document.getElementById('cancel-settings-btn').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'none');
-        document.getElementById('close-daily-btn').addEventListener('click', () => document.getElementById('daily-modal').style.display = 'none');
-        document.getElementById('cancel-daily-btn').addEventListener('click', () => document.getElementById('daily-modal').style.display = 'none');
-        
-        // ADVANCE MODAL (GOVERNMENT RATES) CLOSERS
-        document.getElementById('btn-advance-settings').addEventListener('click', () => {
-            document.getElementById('adv-sss').value = window.govRates.sss;
-            document.getElementById('adv-ph').value = window.govRates.philhealth;
-            document.getElementById('adv-pagibig').value = window.govRates.pagibig;
-            document.getElementById('advance-modal').style.display = 'flex';
-        });
-        document.getElementById('close-advance-btn').addEventListener('click', () => document.getElementById('advance-modal').style.display = 'none');
-        document.getElementById('cancel-advance-btn').addEventListener('click', () => document.getElementById('advance-modal').style.display = 'none');
-
-        // SEARCH
-        document.getElementById('searchInput').addEventListener('keyup', (e) => {
-            const query = e.target.value.toUpperCase();
-            const targetTbody = window.currentTab === 'employee' ? document.getElementById('employee-tbody') : 
-                               (window.currentTab === 'bonuses' ? document.getElementById('bonuses-tbody') : document.getElementById('timesheet-tbody'));
-            const rows = targetTbody.getElementsByClassName('search-row');
-            for (let row of rows) row.style.display = row.innerText.toUpperCase().indexOf(query) > -1 ? '' : 'none';
-        });
-
-        // DATE FORMATTER
-        function toISODate(d) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); }
-        function formatShortDate(dStr) {
-            if(!dStr) return '-';
-            const d = new Date(dStr);
-            let mo = (d.getMonth() + 1).toString().padStart(2, '0');
-            let da = d.getDate().toString().padStart(2, '0');
-            return `${mo}/${da}/${d.getFullYear()}`;
-        }
-        function formatTimeAMPM(time24) {
-            if(!time24) return '';
-            let [h, m] = time24.split(':');
-            let ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12 || 12;
-            return `${h.toString().padStart(2, '0')}:${m} ${ampm}`;
-        }
-
-        // ==============================================================
-        // 2. FIREBASE & ASYNC LOGIC
-        // ==============================================================
-        try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyAc5bBd9Su_78JySz0xJ-gl0uurRSGoJ0U",
-                authDomain: "paysync-7ea63.firebaseapp.com",
-                projectId: "paysync-7ea63",
-                storageBucket: "paysync-7ea63.firebasestorage.app",
-                messagingSenderId: "592719568400",
-                appId: "1:592719568400:web:ca3f1c9634624ada693495"
-            };
-            
-            firebase.initializeApp(firebaseConfig);
-            window.db = firebase.firestore();
-            window.auth = firebase.auth();
-
-            window.employees = [];
-            window.currentTimesheetData = {};
-            window.companyPositions = [];
-            window.systemUsers = [];
-            window.companySettings = {
-                name: "Zjar PaySync", logo: "", address: "123 Business Road, Metro Manila, PH", phone: "+63 912 345 6789",
-                staffAccess: { employee: true, payroll: false, bonuses: false, settings: false }
-            };
-            window.govRates = { sss: 0, philhealth: 0, pagibig: 0 };
-
-            let isLoginMode = true;
-
-            // AUTH
-           document.getElementById('auth-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('auth-email').value;
-                const password = document.getElementById('auth-password').value;
-                const name = document.getElementById('auth-name').value;
-                
-                window.showLoading("Authenticating...");
-                try {
-                    if(isLoginMode) {
-                        await window.auth.signInWithEmailAndPassword(email, password);
-                    } else {
-                        const userCred = await window.auth.createUserWithEmailAndPassword(email, password);
-                        await userCred.user.updateProfile({ displayName: name });
-                        
-                        // Check if may invite link sa URL
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const inviteCode = urlParams.get('invite');
-                        
-                        let role = inviteCode ? "Staff" : "System Developer";
-                        let compId = inviteCode ? inviteCode : userCred.user.uid; // Pag solo, UID nya ang magiging Company ID
-
-                        await window.db.collection("users").doc(userCred.user.uid).set({
-                            name: name || email.split('@')[0],
-                            email: email,
-                            systemRole: role,
-                            activePlan: "Trial (7 days)",
-                            companyId: compId,
-                            registeredAt: new Date().toISOString()
-                        });
-                    }
-                } catch (error) {
-                    alert("Auth Error: " + error.message);
-                }
-                window.hideLoading();
-            });
-
-            document.getElementById('btn-logout').addEventListener('click', () => { window.auth.signOut(); });
-
-            window.auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('dashboard-screen').style.display = 'flex';
-                    
-                    try {
-                        const userRef = window.db.collection('users').doc(user.uid);
-                        let userDoc = await userRef.get();
-                        
-                        if(!userDoc.exists) {
-                            const snapshot = await window.db.collection('users').limit(1).get();
-                            let role = snapshot.empty ? "System Developer" : "Admin";
-
-                            await userRef.set({
-                                name: user.displayName || user.email.split('@')[0],
-                                email: user.email,
-                                systemRole: role,
-                                activePlan: "Trial (7 days)",
-                                registeredAt: new Date().toISOString()
-                            });
-                            userDoc = await userRef.get();
-                        }
-
-                        const userData = userDoc.data();
-                        window.currentCompanyId = userData.companyId || user.uid; // GLOBAL VARIABLE NG KUMPANYA
-                        
-                        document.getElementById('sidebar-greeting').innerText = "Hi " + (userData.name || "Admin") + "!";
-                        document.getElementById('sidebar-role').innerText = userData.systemRole || "User";
-                        
-                        applyAccessRoles(userData.systemRole || 'Staff', user.email);
-                    } catch(err) { console.error(err); }
-                    
-                    fetchInitialData();
-                } else {
-                    window.hideLoading();
-                    document.getElementById('auth-screen').style.display = 'flex';
-                    document.getElementById('dashboard-screen').style.display = 'none';
-                }
-            });
-
-            function applyAccessRoles(role) {
-                const isDevOrAdmin = (role === 'System Developer' || role === 'Admin');
-                document.getElementById('btn-enterprise').style.display = (role === 'System Developer') ? 'flex' : 'none';
-                
-                if (isDevOrAdmin) {
-                    document.getElementById('btn-employee').style.display = 'flex';
-                    document.getElementById('btn-payroll').style.display = 'flex';
-                    document.getElementById('btn-bonuses').style.display = 'flex';
-                    document.getElementById('btn-settings-nav').style.display = 'flex';
-                } else {
-                    const access = window.companySettings.staffAccess || { employee: true, payroll: false, bonuses: false, settings: false };
-                    document.getElementById('btn-employee').style.display = access.employee ? 'flex' : 'none';
-                    document.getElementById('btn-payroll').style.display = access.payroll ? 'flex' : 'none';
-                    document.getElementById('btn-bonuses').style.display = access.bonuses ? 'flex' : 'none';
-                    document.getElementById('btn-settings-nav').style.display = access.settings ? 'flex' : 'none';
-                    
-                    if(!access.employee) {
-                        if(access.payroll) switchTab('payroll');
-                        else if(access.bonuses) switchTab('bonuses');
-                        else document.getElementById('view-employee').style.display = 'none';
-                    }
-                }
-            }
-
-            // ==========================================
-            // INITIAL DATA FETCH
-            // ==========================================
-            async function fetchInitialData() {
-                window.showLoading("Syncing database...");
-                try {
-                    window.employees = [];
-                    // Kukunin lang ang employees ng kumpanya mo
-                    const querySnapshot = await window.db.collection("employees").where("companyId", "==", window.currentCompanyId).get();
-                    querySnapshot.forEach((doc) => {
-                        window.employees.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    const setDocSnap = await window.db.collection("settings").doc("company_" + window.currentCompanyId).get();
-                    if(setDocSnap.exists) window.companySettings = { ...window.companySettings, ...setDocSnap.data() };
-					
-					document.getElementById('sidebar-company-name').innerText = window.companySettings.name || 'My Company';
-
-                    const posDocSnap = await window.db.collection("settings").doc("positions_" + window.currentCompanyId).get();
-                    if(posDocSnap.exists) window.companyPositions = posDocSnap.data().list || [];
-
-                    const ratesDocSnap = await window.db.collection("settings").doc("deductions_" + window.currentCompanyId).get();
-                    if(ratesDocSnap.exists) window.govRates = { ...window.govRates, ...ratesDocSnap.data() };
-                    
-                    populatePositionDropdowns();
-                    
-                    // Auto Reload Saved Dates for Payroll Tab
-                    const savedStart = localStorage.getItem('saved_start');
-                    const savedEnd = localStorage.getItem('saved_end');
-                    const savedPayout = localStorage.getItem('saved_payout');
-                    if (savedStart) document.getElementById('period-start').value = savedStart;
-                    if (savedEnd) document.getElementById('period-end').value = savedEnd;
-                    if (savedPayout) document.getElementById('payout-date').value = savedPayout;
-                    
-                    // Auto-generate if dates exist
-                    if(savedStart && savedEnd) document.getElementById('btn-generate-timesheet').click();
-
-                    const currentUser = window.auth.currentUser;
-                    if(currentUser) {
-                        const userDoc = await window.db.collection('users').doc(currentUser.uid).get();
-                        if(userDoc.exists) applyAccessRoles(userDoc.data().systemRole);
-                    }
-                } catch (error) { console.error("Firebase Read Error:", error); }
-                window.hideLoading();
-                if(window.renderEmployees) window.renderEmployees();
-            }
-
-            // ==========================================
-            // DYNAMIC POSITIONS
-            // ==========================================
-            function populatePositionDropdowns() {
-                const select = document.getElementById('emp-position');
-                select.innerHTML = '';
-                if(window.companyPositions.length === 0) select.add(new Option("No positions found.", "", true, true));
-                else window.companyPositions.forEach(pos => select.add(new Option(pos, pos)));
-            }
-
-            document.getElementById('save-manage-btn').addEventListener('click', async () => {
-                const val = document.getElementById('manage-input').value.trim();
-                if(val && !window.companyPositions.includes(val)) {
-                    window.showLoading("Saving Position...");
-                    window.companyPositions.push(val);
-                    await window.db.collection('settings').doc('positions_' + window.currentCompanyId).set({ list: window.companyPositions });
-                    populatePositionDropdowns();
-                    window.hideLoading();
-                }
-                document.getElementById('manage-modal').style.display = 'none';
-            });
-
-            // ==========================================
-            // ENTERPRISE LOGIC
-            // ==========================================
-            // ==========================================
-            // ENTERPRISE LOGIC
-            // ==========================================
-            
-
-
-            window.loadEnterpriseData = async function() {
-                window.showLoading("Fetching Data...");
-                window.systemUsers = [];
-                try {
-                    // DITO NAKA-INJECT ANG FILTER PARA SA COMPANY ID
-                    const snap = await window.db.collection('users').where("companyId", "==", window.currentCompanyId).get();
-                    snap.forEach(doc => window.systemUsers.push({uid: doc.id, ...doc.data()}));
-                    renderEnterprisePlanTab();
-                    renderEnterpriseUsersTab();
-                    
-                    const tsSnap = await window.db.collection("timesheets").get();
-                    document.getElementById('db-stat-users').innerText = window.systemUsers.length;
-                    document.getElementById('db-stat-emps').innerText = window.employees.length;
-                    document.getElementById('db-stat-ts').innerText = tsSnap.size;
-                } catch(e) { console.error(e); }
-                window.hideLoading();
-            }
-            function renderEnterprisePlanTab() {
-                const tbody = document.getElementById('ent-plan-tbody');
-                tbody.innerHTML = '';
-                if(window.systemUsers.length === 0) return tbody.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-slate-400">No users found.</td></tr>';
-                
-                window.systemUsers.forEach(user => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-4 px-6 font-medium text-slate-800">${user.name || '-'}</td>
-                        <td class="py-4 px-6 text-slate-600">${user.email}</td>
-                        <td class="py-4 px-6 font-semibold text-emerald-600">${user.activePlan || 'Trial (7 days)'}</td>
-                        <td class="py-4 px-6 text-center space-x-3">
-                            <button onclick="openSysUserEdit('${user.uid}', 'plan')" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold cursor-pointer">Edit</button>
-                            <button onclick="alert('Plan Revoked (Simulated)')" class="text-amber-500 hover:text-amber-700 text-xs font-semibold cursor-pointer">Revoke</button>
-                            <button onclick="deleteSysUser('${user.uid}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold cursor-pointer">Delete</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            function renderEnterpriseUsersTab() {
-                const tbody = document.getElementById('ent-users-tbody');
-                tbody.innerHTML = '';
-                if(window.systemUsers.length === 0) return tbody.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-slate-400">No users found.</td></tr>';
-
-                window.systemUsers.forEach(user => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-4 px-6 font-medium text-slate-800">${user.name || '-'}</td>
-                        <td class="py-4 px-6 text-slate-600">${user.email}</td>
-                        <td class="py-4 px-6 font-semibold text-indigo-600">${user.systemRole || 'User'}</td>
-                        <td class="py-4 px-6">
-                            <div class="flex justify-center items-center space-x-3 whitespace-nowrap">
-                                <button onclick="openSysUserEdit('${user.uid}', 'role')" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold cursor-pointer">Edit</button>
-                                <button onclick="alert('Password reset email sent (Simulated)')" class="text-slate-500 hover:text-slate-700 text-xs font-semibold cursor-pointer">Reset PWD</button>
-                                <button onclick="deleteSysUser('${user.uid}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold cursor-pointer">Delete</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            window.openSysUserEdit = function(uid, mode) {
-                const u = window.systemUsers.find(x => x.uid === uid);
-                if(u) {
-                    document.getElementById('edit-sysuser-id').value = uid;
-                    document.getElementById('edit-sysuser-mode').value = mode;
-                    document.getElementById('edit-sysuser-name').value = u.name || '';
-                    
-                    if (mode === 'role') {
-                        document.getElementById('edit-sysuser-title').innerText = "Edit User Settings";
-                        document.getElementById('edit-sys-role-container').style.display = 'block';
-                        document.getElementById('edit-sys-plan-container').style.display = 'none';
-                        document.getElementById('edit-sysuser-role').value = u.systemRole || 'Staff';
-                    } else {
-                        document.getElementById('edit-sysuser-title').innerText = "Edit User Plan";
-                        document.getElementById('edit-sys-role-container').style.display = 'none';
-                        document.getElementById('edit-sys-plan-container').style.display = 'block';
-                        document.getElementById('edit-sysuser-plan').value = u.activePlan || 'Trial (7 days)';
-                    }
-                    document.getElementById('edit-sysuser-modal').style.display = 'flex';
-                }
-            }
-
-            window.deleteSysUser = async function(uid) {
-                if(confirm("Are you sure you want to completely remove this user account from the system?")) {
-                    window.showLoading("Deleting...");
-                    try {
-                        await window.db.collection('users').doc(uid).delete();
-                        window.systemUsers = window.systemUsers.filter(x => x.uid !== uid);
-                        renderEnterprisePlanTab(); renderEnterpriseUsersTab();
-                    } catch(e) { console.error(e); }
-                    window.hideLoading();
-                }
-            }
-
-            document.getElementById('save-sysuser-btn').addEventListener('click', async () => {
-                const uid = document.getElementById('edit-sysuser-id').value;
-                const mode = document.getElementById('edit-sysuser-mode').value;
-                const name = document.getElementById('edit-sysuser-name').value.trim();
-                const role = document.getElementById('edit-sysuser-role').value;
-                const plan = document.getElementById('edit-sysuser-plan').value;
-
-                window.showLoading("Updating...");
-                try {
-                    let updateData = { name: name };
-                    if(mode === 'role') updateData.systemRole = role;
-                    else updateData.activePlan = plan;
-
-                    await window.db.collection('users').doc(uid).update(updateData);
-                    const idx = window.systemUsers.findIndex(x => x.uid === uid);
-                    if(idx > -1) {
-                        window.systemUsers[idx].name = name;
-                        if(mode === 'role') window.systemUsers[idx].systemRole = role;
-                        else window.systemUsers[idx].activePlan = plan;
-                    }
-                    renderEnterprisePlanTab(); renderEnterpriseUsersTab();
-                    document.getElementById('edit-sysuser-modal').style.display = 'none';
-                } catch(e) { console.error(e); }
-                window.hideLoading();
-            });
-
-            // ==========================================
-            // EMPLOYEE & ARCHIVE
-            // ==========================================
-            function getStatusBadge(status) {
-                if(status === 'Active') return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200">Active</span>`;
-                if(status === 'InActive') return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200">InActive</span>`;
-                if(status === 'Resigned') return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700 border border-amber-200">Resigned</span>`;
-                if(status === 'Terminated') return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-100 text-rose-700 border border-rose-200">Terminated</span>`;
-                return `<span>${status}</span>`;
-            }
-
-            window.renderEmployees = function() {
-                const tbody = document.getElementById('employee-tbody');
-                tbody.innerHTML = '';
-                document.getElementById('select-all-emp').checked = false;
-                document.getElementById('bulk-action-btn').style.display = 'none';
-
-                let filteredEmployees = window.employees.filter(e => window.showingArchived ? e.isArchived : !e.isArchived);
-
-                if(filteredEmployees.length === 0) {
-                    return tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-slate-400">No employees found in this view.</td></tr>`;
-                }
-
-                filteredEmployees.forEach(emp => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors search-row";
-                    const actionBtn = window.showingArchived 
-                        ? `<button onclick="toggleArchiveSingle('${emp.id}')" class="text-emerald-600 hover:text-emerald-800 mx-1 text-xs font-medium cursor-pointer">Restore</button>
-                           <button onclick="deleteEmployee('${emp.id}')" class="text-rose-500 hover:text-rose-700 mx-1 text-xs font-medium cursor-pointer">Delete</button>`
-                        : `<button onclick="editEmployee('${emp.id}')" class="text-indigo-600 hover:text-indigo-800 mx-1 text-xs font-medium cursor-pointer">Edit</button>
-                           <button onclick="deleteEmployee('${emp.id}')" class="text-rose-500 hover:text-rose-700 mx-1 text-xs font-medium cursor-pointer">Delete</button>
-                           <button onclick="toggleArchiveSingle('${emp.id}')" class="text-slate-500 hover:text-slate-700 mx-1 text-xs font-medium cursor-pointer">Archive</button>`;
-
-                    tr.innerHTML = `
-                        <td class="px-4 py-4 text-center border-b border-slate-100">
-                            <input type="checkbox" class="emp-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" data-id="${emp.id}" onchange="toggleBulkBtn()">
-                        </td>
-                        <td class="px-4 py-4 font-semibold text-slate-900 border-b border-slate-100">${emp.name}</td>
-                        <td class="px-4 py-4 border-b border-slate-100">${getStatusBadge(emp.status)}</td>
-                        <td class="px-4 py-4 text-slate-500 text-sm border-b border-slate-100">${emp.email || '-'}</td>
-                        <td class="px-4 py-4 text-slate-600 border-b border-slate-100">${emp.position || '-'}</td>
-                        <td class="px-4 py-4 text-slate-600 border-b border-slate-100"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">${emp.shift}</span></td>
-                        <td class="px-4 py-4 font-bold text-slate-800 border-b border-slate-100">₱${emp.rate.toLocaleString()}</td>
-                        <td class="px-4 py-4 text-center border-b border-slate-100">${actionBtn}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            document.getElementById('tab-active-emp').addEventListener('click', (e) => {
-                window.showingArchived = false;
-                e.target.className = "px-4 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-md transition-all cursor-pointer";
-                document.getElementById('tab-archived-emp').className = "px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-md transition-all cursor-pointer";
-                window.renderEmployees();
-            });
-
-            document.getElementById('tab-archived-emp').addEventListener('click', (e) => {
-                window.showingArchived = true;
-                e.target.className = "px-4 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-md transition-all cursor-pointer";
-                document.getElementById('tab-active-emp').className = "px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-md transition-all cursor-pointer";
-                window.renderEmployees();
-            });
-
-            window.toggleArchiveSingle = async function(id) {
-                const emp = window.employees.find(e => e.id === id);
-                if(emp) {
-                    window.showLoading("Updating...");
-                    const newStatus = !emp.isArchived;
-                    await window.db.collection("employees").doc(id).update({ isArchived: newStatus });
-                    emp.isArchived = newStatus;
-                    window.hideLoading(); window.renderEmployees();
-                }
-            }
-
-            window.deleteEmployee = async function(id) {
-                if(confirm("Are you sure you want to delete this employee permanently?")) {
-                    window.showLoading("Deleting...");
-                    await window.db.collection("employees").doc(id).delete();
-                    window.employees = window.employees.filter(e => e.id !== id);
-                    window.hideLoading(); window.renderEmployees();
-                }
-            }
-
-            window.toggleBulkBtn = function() {
-                const checkedCount = document.querySelectorAll('.emp-checkbox:checked').length;
-                const btn = document.getElementById('bulk-action-btn');
-                if(checkedCount > 0) {
-                    btn.style.display = 'flex';
-                    btn.innerHTML = window.showingArchived ? 
-                        `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Restore Selected` : 
-                        `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> Archive Selected`;
-                } else { btn.style.display = 'none'; }
-            }
-
-            document.getElementById('bulk-action-btn').addEventListener('click', async () => {
-                window.showLoading("Processing...");
-                const checkboxes = document.querySelectorAll('.emp-checkbox:checked');
-                for(const cb of checkboxes) {
-                    const id = cb.dataset.id;
-                    const emp = window.employees.find(e => e.id === id);
-                    if(emp) {
-                        await window.db.collection("employees").doc(id).update({ isArchived: !window.showingArchived });
-                        emp.isArchived = !window.showingArchived;
-                    }
-                }
-                window.hideLoading(); window.renderEmployees();
-            });
-
-            document.getElementById('select-all-emp').addEventListener('change', (e) => {
-                const checkboxes = document.querySelectorAll('.emp-checkbox');
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
-                window.toggleBulkBtn();
-            });
-
-            document.getElementById('save-emp-btn').addEventListener('click', async () => {
-                const id = document.getElementById('emp-id').value;
-                const name = document.getElementById('emp-name').value.trim();
-                const email = document.getElementById('emp-email').value.trim();
-                const status = document.getElementById('emp-status').value;
-                const position = document.getElementById('emp-position').value;
-                const shiftStart = document.getElementById('emp-shift-start').value;
-                const shiftEnd = document.getElementById('emp-shift-end').value;
-                const rate = parseFloat(document.getElementById('emp-rate').value);
-
-                if(!name || isNaN(rate)) return alert("Valid Name and Rate required!");
-                const formattedShift = `${formatTimeAMPM(shiftStart)} - ${formatTimeAMPM(shiftEnd)}`;
-                
-                window.showLoading("Saving...");
-                const empData = { name, email, status, position, shift: formattedShift, shiftStart, shiftEnd, rate };
-
-                if(window.editMode) {
-                    await window.db.collection("employees").doc(id).update(empData);
-                    const idx = window.employees.findIndex(e => e.id === id);
-                    window.employees[idx] = { ...window.employees[idx], ...empData };
-                } else {
-                    empData.ytdSalary = 0; empData.isArchived = false;
-                    empData.companyId = window.currentCompanyId; // Idinikit ang kumpanya
-                    const docRef = await window.db.collection("employees").add(empData);
-                    window.employees.push({ id: docRef.id, ...empData });
-                }
-
-                window.hideLoading();
-                document.getElementById('employee-modal').style.display = 'none';
-                window.renderEmployees();
-                if(window.currentTab === 'bonuses' && window.renderBonuses) window.renderBonuses();
-            });
-
-            // ==========================================
-            // PAYROLL & TIMESHEET (WITH GOV DEDUCTIONS)
-            // ==========================================
-           document.getElementById('save-advance-btn').addEventListener('click', async () => {
-            const sss = parseFloat(document.getElementById('adv-sss').value) || 0;
-            const ph = parseFloat(document.getElementById('adv-ph').value) || 0;
-            const pagibig = parseFloat(document.getElementById('adv-pagibig').value) || 0;
-
-            window.showLoading("Saving Deductions...");
-            window.govRates = { sss, philhealth: ph, pagibig };
-            
-            // DITO NAKA-INJECT ANG COMPANY ID PARA SA DEDUCTIONS
-            if(window.db) await window.db.collection("settings").doc("deductions_" + window.currentCompanyId).set(window.govRates);
-            
-            document.getElementById('advance-modal').style.display = 'none';
-            window.hideLoading();
-            
-            // Refresh timesheet automatically if open
-            if(window.currentTab === 'payroll') document.getElementById('btn-generate-timesheet').click();
-        });
-
-            document.getElementById('btn-generate-timesheet').addEventListener('click', async () => {
-                const startInput = document.getElementById('period-start').value;
-                const endInput = document.getElementById('period-end').value;
-                const payoutInput = document.getElementById('payout-date').value;
-                
-                if (startInput) localStorage.setItem('saved_start', startInput);
-                if (endInput) localStorage.setItem('saved_end', endInput);
-                if (payoutInput) localStorage.setItem('saved_payout', payoutInput);
-                
-                if(!startInput || !endInput) return alert("Please select a Period Start and End date first.");
-                if(new Date(startInput) > new Date(endInput)) return alert("Period Start Date cannot be later than End Date.");
-
-                const activeEmployees = window.employees.filter(e => e.status === 'Active' && !e.isArchived);
-                const tbody = document.getElementById('timesheet-tbody');
-                tbody.innerHTML = '';
-                window.currentTimesheetData = {};
-
-                if(activeEmployees.length === 0) {
-                     return tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No active/unarchived employees found.</td></tr>`;
-                }
-
-                window.showLoading("Fetching timesheets...");
-                const periodKey = `${startInput}_to_${endInput}`;
-                const rates = window.govRates;
-
-                for (const emp of activeEmployees) {
-                    const docId = `ts_${emp.id}_${periodKey}`;
-                    let totalHrs = 0; let grossPay = 0;
-                    
-                    const tsDoc = await window.db.collection("timesheets").doc(docId).get();
-                    if (tsDoc.exists) {
-                        window.currentTimesheetData[emp.id] = tsDoc.data().days;
-                        totalHrs = tsDoc.data().days.reduce((s, d) => s + d.duration, 0);
-                        grossPay = tsDoc.data().days.reduce((s, d) => s + d.rate, 0);
-                    }
-
-                    // Fixed amounts na lahat
-                    let sssDed = grossPay > 0 ? parseFloat(rates.sss) : 0;
-                    let phDed = grossPay > 0 ? parseFloat(rates.philhealth) : 0;
-                    let pagibigDed = grossPay > 0 ? parseFloat(rates.pagibig) : 0;
-                    let totalDeductions = sssDed + phDed + pagibigDed;
-                    let netPay = grossPay - totalDeductions;
-
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors search-row";
-                    tr.innerHTML = `
-                        <td class="px-4 py-4 font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer" onclick="openDailyModal('${emp.id}')">${emp.name}</td>
-                        <td class="px-4 py-4 text-slate-700 text-center font-bold" id="summary-hrs-${emp.id}">${totalHrs.toFixed(2)}</td>
-                        <td class="px-4 py-4 text-slate-700 text-center font-bold" id="summary-sal-${emp.id}">₱${grossPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td class="px-4 py-4 text-rose-500 text-center font-bold text-xs" title="SSS: ₱${sssDed.toFixed(2)} | PH: ₱${phDed.toFixed(2)} | Pag-IBIG: ₱${pagibigDed}">- ₱${totalDeductions.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td class="px-4 py-4 text-emerald-600 text-center font-bold text-base">₱${netPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                       <td class="px-4 py-4 text-center space-x-2">
-                            <button onclick="window.openDailyModal('${emp.id}')" class="text-xs bg-white text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors border border-slate-300 cursor-pointer shadow-sm">View Dates</button>
-                            <button onclick="window.sendTimesheet('${emp.id}')" class="text-xs bg-white text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded transition-colors border border-slate-300 cursor-pointer shadow-sm">Send</button>
-                            <button onclick="window.printTimesheet('${emp.id}')" class="text-xs bg-white text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded transition-colors border border-slate-300 cursor-pointer shadow-sm">Print</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-                window.hideLoading();
-            });
-
-            function sortTimesheetData(empId) {
-                if(window.currentTimesheetData[empId]) {
-                    window.currentTimesheetData[empId].sort((a, b) => {
-                        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
-                        return (a.timeIn || '00:00').localeCompare(b.timeIn || '00:00');
-                    });
-                }
-            }
-
-            window.openDailyModal = function(empId) {
-                const emp = window.employees.find(e => e.id === empId);
-                const startInput = document.getElementById('period-start').value;
-                const endInput = document.getElementById('period-end').value;
-                if(!startInput || !endInput) return alert("Select Period Start and End dates first.");
-
-                document.getElementById('daily-modal-title').innerText = `Timesheet: ${emp.name}`;
-                
-                if(!window.currentTimesheetData[empId] || window.currentTimesheetData[empId].length === 0) {
-                    window.currentTimesheetData[empId] = [];
-                    let d = new Date(startInput);
-                    const end = new Date(endInput);
-                    let loopCount = 0; 
-                    while(d <= end && loopCount < 365) {
-                        window.currentTimesheetData[empId].push({ dateStr: toISODate(d), timeIn: emp.shiftStart, timeOut: emp.shiftEnd, ot: 0, duration: 0, rate: 0 });
-                        d.setDate(d.getDate() + 1);
-                        loopCount++;
-                    }
-                }
-
-                window.currentTimesheetData[empId].forEach((day, index) => {
-                    if(day.duration === 0) {
-                        let hours = 0;
-                        if (day.timeIn && day.timeOut) {
-                            let st = new Date("1970-01-01T" + day.timeIn + ":00");
-                            let en = new Date("1970-01-01T" + day.timeOut + ":00");
-                            if (en < st) en.setDate(en.getDate() + 1);
-                            
-                            let rawHours = (en - st) / (1000 * 60 * 60);
-                            // Auto-deduct 1 hour break kung lagpas 4 oras ang duty
-                            hours = rawHours > 4 ? rawHours - 1 : rawHours;
-                        }
-                        let totalDur = hours + day.ot;
-                        let dailyRateVal = (totalDur / 8) * emp.rate;
-                        window.currentTimesheetData[empId][index] = { ...day, duration: totalDur, rate: dailyRateVal };
-                    }
-                });
-
-                sortTimesheetData(empId);
-                renderDailyTable(empId);
-
-                document.getElementById('daily-emp-id').value = empId;
-                document.getElementById('daily-modal').style.display = 'flex';
-            }
-
-            function renderDailyTable(empId) {
-                const tbody = document.getElementById('daily-tbody');
-                tbody.innerHTML = '';
-                
-                window.currentTimesheetData[empId].forEach((day, index) => {
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-slate-200 hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-2"><input type="date" class="t-date w-full bg-white border border-slate-300 text-slate-800 py-1 px-2 rounded focus:border-indigo-500 text-xs font-medium" value="${day.dateStr}" onchange="calcDaily('${empId}', ${index}, this)"></td>
-                        <td class="px-2 py-2"><input type="time" class="t-in w-full bg-white border border-slate-300 text-slate-800 py-1 px-2 rounded focus:border-indigo-500 text-xs" value="${day.timeIn}" onchange="calcDaily('${empId}', ${index}, this)"></td>
-                        <td class="px-2 py-2"><input type="time" class="t-out w-full bg-white border border-slate-300 text-slate-800 py-1 px-2 rounded focus:border-indigo-500 text-xs" value="${day.timeOut}" onchange="calcDaily('${empId}', ${index}, this)"></td>
-                        <td class="px-2 py-2"><input type="number" min="0" class="t-ot w-full bg-white border border-slate-300 text-slate-800 py-1 px-2 rounded focus:border-indigo-500 text-xs" value="${day.ot}" oninput="calcDaily('${empId}', ${index}, this)"></td>
-                        <td class="px-2 py-2 text-center font-bold text-slate-700 text-xs t-dur">${day.duration.toFixed(2)}</td>
-                        <td class="px-2 py-2 text-center font-bold text-emerald-600 text-xs t-rate">₱${day.rate.toFixed(2)}</td>
-                        <td class="px-2 py-2 text-center">
-                            <button onclick="removeTimesheetLine('${empId}', ${index})" class="text-rose-500 hover:text-rose-700 cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            // 1. Kapag pinindot ang "+ Add Timesheet", ipapakita ang Date Picker Modal
-            document.getElementById('add-timesheet-line-btn').addEventListener('click', () => {
-                const startInput = document.getElementById('period-start').value;
-                document.getElementById('new-ts-date').value = startInput || toISODate(new Date());
-                document.getElementById('add-date-modal').style.display = 'flex';
-            });
-
-            // 2. Kapag pinili ang date at kinonfirm
-            document.getElementById('confirm-add-date-btn').addEventListener('click', () => {
-                const empId = document.getElementById('daily-emp-id').value;
-                const emp = window.employees.find(e => e.id === empId);
-                const chosenDate = document.getElementById('new-ts-date').value;
-
-                if(!chosenDate) return alert("Please select a date!");
-
-                // Push ang bagong date sa data ng empleyado
-                window.currentTimesheetData[empId].push({ 
-                    dateStr: chosenDate, 
-                    timeIn: emp.shiftStart || '08:00', 
-                    timeOut: emp.shiftEnd || '17:00', 
-                    ot: 0, duration: 0, rate: 0 
-                });
-
-                // I-compute agad para hindi 0.00 ang lumabas
-                let lastIdx = window.currentTimesheetData[empId].length - 1;
-                let addedDay = window.currentTimesheetData[empId][lastIdx];
-                let hours = 0;
-                if (addedDay.timeIn && addedDay.timeOut) {
-                    let st = new Date("1970-01-01T" + addedDay.timeIn + ":00");
-                    let en = new Date("1970-01-01T" + addedDay.timeOut + ":00");
-                    if (en < st) en.setDate(en.getDate() + 1);
-                    
-                    let rawHours = (en - st) / (1000 * 60 * 60);
-                    hours = rawHours > 4 ? rawHours - 1 : rawHours; // Deduct 1 hr break
-                }
-                addedDay.duration = hours;
-                addedDay.rate = (hours / 8) * (emp.rate || 0);
-
-                // ETO YUNG AUTO-SORT CHRONOLOGICALLY bago i-render sa screen
-                sortTimesheetData(empId);
-                renderDailyTable(empId);
-
-                // Isara ang date modal
-                document.getElementById('add-date-modal').style.display = 'none';
-            });
-
-            window.removeTimesheetLine = function(empId, index) {
-                window.currentTimesheetData[empId].splice(index, 1);
-                renderDailyTable(empId);
-            }
-
-            window.calcDaily = function(empId, index, el) {
-                const tr = el.closest('tr');
-                const emp = window.employees.find(e => e.id === empId);
-                const dateStr = tr.querySelector('.t-date').value;
-                const timeIn = tr.querySelector('.t-in').value;
-                const timeOut = tr.querySelector('.t-out').value;
-                const ot = parseFloat(tr.querySelector('.t-ot').value) || 0;
-                
-                let hours = 0;
-                if (timeIn && timeOut) {
-                    let start = new Date("1970-01-01T" + timeIn + ":00");
-                    let end = new Date("1970-01-01T" + timeOut + ":00");
-                    if (end < start) end.setDate(end.getDate() + 1);
-                    
-                    let rawHours = (end - start) / (1000 * 60 * 60);
-                    // Auto-deduct 1 hour break kung lagpas 4 oras ang duty
-                    hours = rawHours > 4 ? rawHours - 1 : rawHours;
-                }
-                
-                let totalDur = hours + ot;
-                let dailyRateVal = (totalDur / 8) * emp.rate;
-                
-                tr.querySelector('.t-dur').innerText = totalDur.toFixed(2);
-                tr.querySelector('.t-rate').innerText = "₱" + dailyRateVal.toFixed(2);
-                
-                window.currentTimesheetData[empId][index] = { dateStr, timeIn, timeOut, ot, duration: totalDur, rate: dailyRateVal };
-            }
-
-            document.getElementById('save-daily-btn').addEventListener('click', async () => {
-                const empId = document.getElementById('daily-emp-id').value;
-                sortTimesheetData(empId); 
-                const data = window.currentTimesheetData[empId];
-                
-                document.getElementById('daily-modal').style.display = 'none';
-                
-                const startInput = document.getElementById('period-start').value;
-                const endInput = document.getElementById('period-end').value;
-                const periodKey = `${startInput}_to_${endInput}`;
-                const docId = `ts_${empId}_${periodKey}`;
-                
-                window.showLoading("Saving Timesheet...");
-                await window.db.collection("timesheets").doc(docId).set({
-                    empId: empId,
-                    start: startInput,
-                    end: endInput,
-                    days: data
-                }, { merge: true });
-                window.hideLoading();
-                
-                document.getElementById('btn-generate-timesheet').click(); // Auto refresh table
-            });
-
-            // SEND EMAIL
-            window.sendTimesheet = async function(id) {
-                const emp = window.employees.find(e => e.id === id);
-                const startInput = document.getElementById('period-start').value;
-                const endInput = document.getElementById('period-end').value;
-                const payoutStr = document.getElementById('payout-date').value;
-
-                let data = window.currentTimesheetData[id];
-                
-                if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "PASTE_YOUR_GAS_URL_HERE") {
-                    return alert("Developer: Please set the GAS_WEB_APP_URL in the script to send emails via backend.");
-                }
-                if(!emp || !emp.email) return alert("Error: Employee has no valid email address setup.");
-                if(!data) return alert("Please open 'View Dates' and generate the timesheet first.");
-
-                const periodLabel = `${formatShortDate(startInput)} to ${formatShortDate(endInput)}`;
-                let totalHrs = data.reduce((sum, day) => sum + day.duration, 0);
-                let grossPay = data.reduce((sum, day) => sum + day.rate, 0);
-                
-                let sssDed = grossPay > 0 ? parseFloat(window.govRates.sss) : 0;
-                let phDed = grossPay > 0 ? parseFloat(window.govRates.philhealth) : 0;
-                let pagibigDed = grossPay > 0 ? parseFloat(window.govRates.pagibig) : 0;
-                let totalDeductions = sssDed + phDed + pagibigDed;
-                let netPay = grossPay - totalDeductions;
-                
-                let subject = `Your Payroll Timesheet: ${periodLabel}`;
-                
-                let htmlBody = `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2>Payroll Timesheet for ${emp.name}</h2>
-                        <p><strong>Period:</strong> ${periodLabel}<br>
-                        <strong>Payout Date:</strong> ${payoutStr ? formatShortDate(payoutStr) : 'Not Set'}</p>
-                        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%; text-align: left;">
-                            <tr style="background:#f1f5f9;">
-                                <th>Date</th><th>Time In</th><th>Time Out</th><th>OT</th><th>Duration</th><th>Earned</th>
-                            </tr>`;
-                
-                data.forEach(d => {
-                    htmlBody += `<tr>
-                        <td>${formatShortDate(d.dateStr)}</td>
-                        <td>${formatTimeAMPM(d.timeIn)}</td>
-                        <td>${formatTimeAMPM(d.timeOut)}</td>
-                        <td align="center">${d.ot}</td>
-                        <td align="center">${d.duration.toFixed(2)}</td>
-                        <td align="right">PHP ${d.rate.toFixed(2)}</td>
-                    </tr>`;
-                });
-
-                htmlBody += `<tr>
-                    <td colspan="4" align="right"><strong>TOTAL GROSS PAY:</strong></td>
-                    <td align="center"><strong>${totalHrs.toFixed(2)}</strong></td>
-                    <td align="right"><strong>PHP ${grossPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
-                </tr>
-                <tr>
-                    <td colspan="5" align="right" style="color:red;"><strong>DEDUCTIONS (SSS/PH/PagIBIG):</strong></td>
-                    <td align="right" style="color:red;"><strong>- PHP ${totalDeductions.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
-                </tr>
-                <tr style="background:#e0f2fe;">
-                    <td colspan="5" align="right"><strong>FINAL NET PAY:</strong></td>
-                    <td align="right"><strong>PHP ${netPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
-                </tr>
-                </table>
-                <br><p style="color: #64748b; font-size: 12px;">Sent securely via PaySync.</p></div>`;
-
-                window.showLoading("Sending email to " + emp.email + "...");
-
-                try {
-                    const response = await fetch(GAS_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: "sendEmail",
-                            email: emp.email,
-                            subject: subject,
-                            htmlBody: htmlBody
-                        })
-                    });
-                    const result = await response.json();
-                    window.hideLoading();
-                    if(result.success) {
-                        alert(`Success! Timesheet successfully sent to ${emp.email}`);
-                    } else {
-                        alert("Backend Error: " + result.error);
-                    }
-                } catch (err) {
-                    window.hideLoading();
-                    alert("Failed to send request. Make sure your GAS URL is deployed properly.");
-                }
-            }
-
-            // PRINT TIMESHEET
-            window.printTimesheet = function(id) {
-                const emp = window.employees.find(e => e.id === id);
-                if(!window.currentTimesheetData[id]) return alert("Please open 'View Dates' first.");
-
-                document.getElementById('print-company-name').innerText = window.companySettings.name;
-                document.getElementById('print-address').innerText = window.companySettings.address;
-                document.getElementById('print-phone').innerText = window.companySettings.phone;
-                if(window.companySettings.logo) {
-                    document.getElementById('print-logo').src = window.companySettings.logo;
-                    document.getElementById('print-logo').style.display = 'block';
-                } else {
-                    document.getElementById('print-logo').style.display = 'none';
-                }
-                
-                const startInput = document.getElementById('period-start').value;
-                const endInput = document.getElementById('period-end').value;
-                const payoutStr = document.getElementById('payout-date').value;
-                const periodLabel = `${formatShortDate(startInput)} - ${formatShortDate(endInput)}`;
-
-                document.getElementById('print-period').innerText = `Period: ${periodLabel} | Payout: ${payoutStr ? formatShortDate(payoutStr) : 'Not Set'}`;
-                let data = window.currentTimesheetData[id];
-                
-                let totalHrs = data.reduce((sum, day) => sum + day.duration, 0);
-                let grossPay = data.reduce((sum, day) => sum + day.rate, 0);
-                let sssDed = grossPay * (window.govRates.sss / 100);
-                let phDed = grossPay * (window.govRates.philhealth / 100);
-                let pagibigDed = grossPay > 0 ? window.govRates.pagibig : 0;
-                let totalDeductions = sssDed + phDed + pagibigDed;
-                let netPay = grossPay - totalDeductions;
-
-                const ptbody = document.getElementById('print-tbody');
-                ptbody.innerHTML = `
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px; font-size: 13px; color: #0f172a; font-weight: bold;">${emp.name}</td>
-                        <td style="padding: 10px; font-size: 13px; color: #0f172a; font-weight: bold; text-align: center;">${totalHrs.toFixed(2)}</td>
-                        <td style="padding: 10px; font-size: 13px; color: #0f172a; text-align: center;">₱${grossPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td style="padding: 10px; font-size: 13px; color: #dc2626; text-align: center;">- ₱${totalDeductions.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td style="padding: 10px; font-size: 13px; color: #15803d; font-weight: bold; text-align: right;">₱${netPay.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    </tr>
-                `;
-
-                document.getElementById('print-timestamp').innerText = new Date().toLocaleString();
-                window.print();
-            }
-
-            // ==========================================
-            // BONUSES
-            // ==========================================
-            window.renderBonuses = function() {
-                const tbody = document.getElementById('bonuses-tbody');
-                tbody.innerHTML = '';
-                let active = window.employees.filter(e => e.status === 'Active' && !e.isArchived);
-                if(active.length === 0) return tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">No active/unarchived employees found.</td></tr>`;
-
-                active.forEach(emp => {
-                    let ytd = emp.ytdSalary || 0;
-                    let thirteeth = ytd / 12;
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors search-row";
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 font-semibold text-slate-900">${emp.name}</td>
-                        <td class="px-6 py-4">${getStatusBadge(emp.status)}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-slate-500">₱</span>
-                                <input type="number" value="${ytd}" onchange="updateYTD('${emp.id}', this.value)" class="w-32 bg-white border border-slate-300 rounded px-2 py-1 text-slate-800 text-sm focus:outline-none focus:border-indigo-500">
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 font-bold text-emerald-600 text-lg" id="13th-${emp.id}">₱${thirteeth.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            window.updateYTD = async function(id, val) {
-                let emp = window.employees.find(e => e.id === id);
-                if(emp) {
-                    let num = parseFloat(val) || 0;
-                    emp.ytdSalary = num;
-                    document.getElementById(`13th-${id}`).innerText = "₱" + (num / 12).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    await window.db.collection("employees").doc(id).update({ ytdSalary: num });
-                }
-            }
-
-            // ==========================================
-            // SETTINGS & LOGO UPLOAD
-            // ==========================================
-            document.getElementById('save-settings-btn').addEventListener('click', async () => {
-            window.companySettings.name = document.getElementById('set-name').value;
-            window.companySettings.address = document.getElementById('set-address').value;
-            window.companySettings.phone = document.getElementById('set-phone').value;
-            
-            window.companySettings.staffAccess = {
-                employee: document.getElementById('access-employee').checked,
-                payroll: document.getElementById('access-payroll').checked,
-                bonuses: document.getElementById('access-bonuses').checked,
-                settings: document.getElementById('access-settings').checked
-            };
-
-            const fileInput = document.getElementById('set-logo-file');
-            
-            if (fileInput.files.length > 0) {
-                if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "PASTE_YOUR_GAS_URL_HERE") {
-                    alert("Developer: Please set GAS_WEB_APP_URL in the code to upload a logo.");
-                    return;
-                }
-                const file = fileInput.files[0];
-                document.getElementById('upload-status').classList.remove('hidden');
-                document.getElementById('upload-status').innerText = "Uploading to Google Drive...";
-                
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const base64Data = e.target.result.split(',')[1];
-                    try {
-                        const response = await fetch(GAS_WEB_APP_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'uploadLogo', fileName: file.name, mimeType: file.type, base64: base64Data })
-                        });
-                        const res = await response.json();
-                        if(res.success) {
-                            window.companySettings.logo = res.url;
-                            
-                            // DITO NAKA-INJECT ANG COMPANY ID KAPAG MAY LOGO
-                            if(window.db) await window.db.collection("settings").doc("company_" + window.currentCompanyId).set(window.companySettings, { merge: true });
-                            
-                            document.getElementById('settings-modal').style.display = 'none';
-                            alert("Settings and Logo saved successfully!");
-                        } else {
-                            alert("Backend Error: " + res.error);
-                        }
-                    } catch(err) {
-                        alert("Failed to upload. Ensure your GAS URL is set correctly in the code.");
-                    }
-                    document.getElementById('upload-status').classList.add('hidden');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                window.showLoading("Saving Settings...");
-                
-                // DITO NAKA-INJECT ANG COMPANY ID KAPAG WALANG LOGO
-                if(window.db) await window.db.collection("settings").doc("company_" + window.currentCompanyId).set(window.companySettings, { merge: true });
-                
-                window.hideLoading();
-                document.getElementById('settings-modal').style.display = 'none';
-                alert("Settings saved successfully!");
-            }
-        });
-
-        } catch(e) {
-            console.error("Firebase Initialization Error:", e);
-        }
-		window.editEmployee = function(id) {
-    window.editMode = true; 
-    document.getElementById('modal-title').innerText = "Edit Employee";
-    const emp = window.employees.find(e => e.id === id);
-    if(emp) {
-        document.getElementById('emp-id').value = emp.id;
-        document.getElementById('emp-name').value = emp.name || '';
-        document.getElementById('emp-email').value = emp.email || '';
-        document.getElementById('emp-status').value = emp.status || 'Active';
-        document.getElementById('emp-position').value = emp.position || '';
-        document.getElementById('emp-shift-start').value = emp.shiftStart || '08:00';
-        document.getElementById('emp-shift-end').value = emp.shiftEnd || '17:00';
-        document.getElementById('emp-rate').value = emp.rate || 0;
-        document.getElementById('employee-modal').style.display = 'flex';
-    }
-}
-// Tab Switching for Company Settings (General, Access Role, Plan Details)
-document.getElementById('set-tab-plan').addEventListener('click', (e) => {
-    e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm cursor-pointer";
-    document.getElementById('set-tab-general').className = "px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer";
-    document.getElementById('set-tab-access').className = "px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold text-sm cursor-pointer";
-    
-    document.getElementById('set-content-plan').style.display = 'block';
-    document.getElementById('set-content-general').style.display = 'none';
-    document.getElementById('set-content-access').style.display = 'none';
-});
-
-// Open Payment Checkout Modal
-window.openPaymentModal = function(planName, price) {
-    document.getElementById('pay-plan-name').value = planName;
-    document.getElementById('pay-selected-plan').innerText = planName;
-    document.getElementById('pay-selected-price').innerText = `₱${price}/mo`;
-    document.getElementById('payment-modal').style.display = 'flex';
-};
-
-// Payment Method Toggle Simulation
-document.getElementById('pay-method-card').addEventListener('click', function() {
-    this.className = "py-2 border-2 border-indigo-600 text-indigo-600 font-bold rounded-lg text-xs flex items-center justify-center cursor-pointer";
-    document.getElementById('pay-method-paypal').className = "py-2 border border-slate-300 text-slate-600 font-semibold rounded-lg text-xs flex items-center justify-center cursor-pointer hover:bg-slate-50";
-});
-
-document.getElementById('pay-method-paypal').addEventListener('click', function() {
-    this.className = "py-2 border-2 border-indigo-600 text-indigo-600 font-bold rounded-lg text-xs flex items-center justify-center cursor-pointer";
-    document.getElementById('pay-method-card').className = "py-2 border border-slate-300 text-slate-600 font-semibold rounded-lg text-xs flex items-center justify-center cursor-pointer hover:bg-slate-50";
-});
-
-// Handle Payment Submission
-document.getElementById('payment-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const chosenPlan = document.getElementById('pay-plan-name').value;
-    
-    window.showLoading("Processing Payment...");
-    
-    try {
-        const user = window.auth.currentUser;
-        if(user && window.db) {
-            await window.db.collection('users').doc(user.uid).update({
-                activePlan: chosenPlan
-            });
-        }
-        window.hideLoading();
-        document.getElementById('payment-modal').style.display = 'none';
-        document.getElementById('settings-modal').style.display = 'none';
-        alert(`Payment Successful! Your account has been upgraded to ${chosenPlan}.`);
-    } catch(err) {
-        window.hideLoading();
-        alert("Payment Error: " + err.message);
-    }
-});
-window.copyInviteLink = function() {
-                if (!window.currentCompanyId) return alert("Error: Company ID not found.");
-                const link = window.location.origin + window.location.pathname + "?invite=" + window.currentCompanyId;
-                navigator.clipboard.writeText(link);
-                document.getElementById('invite-link-display').value = link;
-                document.getElementById('invite-modal').style.display = 'flex';
-            };
-			// ==========================================
-        // ENTERPRISE TAB SWITCHING (INCLUDES TAB ACCESS)
-        // ==========================================
-        function resetEntTabs() {
-            const tabs = ['ent-tab-plan', 'ent-tab-users', 'ent-tab-db', 'ent-tab-access'];
-            const contents = ['ent-content-plan', 'ent-content-users', 'ent-content-db', 'ent-content-access'];
-            tabs.forEach(t => document.getElementById(t).className = "px-4 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-semibold cursor-pointer");
-            contents.forEach(c => document.getElementById(c).style.display = 'none');
-        }
-
-        document.getElementById('ent-tab-plan').addEventListener('click', (e) => {
-            resetEntTabs(); e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-plan').style.display = 'block';
-        });
-        document.getElementById('ent-tab-users').addEventListener('click', (e) => {
-            resetEntTabs(); e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-users').style.display = 'block';
-        });
-        document.getElementById('ent-tab-db').addEventListener('click', (e) => {
-            resetEntTabs(); e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-db').style.display = 'block';
-        });
-        document.getElementById('ent-tab-access').addEventListener('click', (e) => {
-            resetEntTabs(); e.target.className = "px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold cursor-pointer";
-            document.getElementById('ent-content-access').style.display = 'block';
-        });
-
-        // ==========================================
-        // SAVE TAB ACCESS LOGIC
-        // ==========================================
-        document.getElementById('save-global-tabs-btn').addEventListener('click', async () => {
-            window.showLoading("Saving Tab Settings...");
-            
-            // Kunin kung ano ang naka-check
-            const tabSettings = {
-                employee: document.getElementById('global-tab-employee').checked,
-                payroll: document.getElementById('global-tab-payroll').checked,
-                bonuses: document.getElementById('global-tab-bonuses').checked
-            };
-
-            // I-apply agad sa UI Sidebar (Itatago kapag false)
-            document.getElementById('btn-employee').style.display = tabSettings.employee ? 'flex' : 'none';
-            document.getElementById('btn-payroll').style.display = tabSettings.payroll ? 'flex' : 'none';
-            document.getElementById('btn-bonuses').style.display = tabSettings.bonuses ? 'flex' : 'none';
-
-            // I-save sa Firebase (Optional: para maalala sa next login)
-            if(window.db) await window.db.collection("settings").doc("global_tabs_" + window.currentCompanyId).set(tabSettings);
-            
-            window.hideLoading();
-            alert("Global Tab Access saved successfully! Sidebar has been updated.");
-        });
-    </script>
 </body>
 </html>
