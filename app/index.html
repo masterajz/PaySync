@@ -2480,15 +2480,17 @@ window.calcDaily = function(empId, index, el) {
         dateStr, timeIn, timeOut, ot, nd: ndHours, duration: totalDur, rate: dailyRateVal, basicPay: basicPay 
     };
 }
-// AUTO-SWITCH TO REGISTER KUNG MAY ?mode=register SA URL
-    window.addEventListener('load', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('mode') === 'register') {
-            const switchBtn = document.getElementById('auth-switch-btn');
-            if (switchBtn) {
-                switchBtn.click(); // Iki-click niya kusa 'yung "Register" button
+// SUREBALL AUTO-SWITCH TO REGISTER
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'register') {
+                const switchBtn = document.getElementById('auth-switch-btn');
+                if (switchBtn) {
+                    switchBtn.click(); 
+                }
             }
-        }
+        }, 300); // Nilagyan natin ng 300ms delay para siguradong loaded na lahat ng click events
     });
     </script>
 </body>
